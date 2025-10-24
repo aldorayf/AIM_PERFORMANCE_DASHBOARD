@@ -1,0 +1,91 @@
+export interface ProfitabilityRecord {
+  loadNumber: string;
+  containerNumber: string;
+  customer: string;
+  date: string;
+  driver: string;
+  chargesType: string[];
+  totalCharges: number;
+  driverPayTotal: number;
+  expenseTotal: number;
+  profit: number;
+  profitMargin: number;
+  isOTR: boolean;
+}
+
+export interface OTRRecord {
+  aimReferenceNumber: string;
+  deliveryLocation: string;
+  container: string;
+  eta: string;
+  vessel: string;
+  deliveryDate: string;
+  customer: string;
+  driver: string;
+  margin: number;
+}
+
+export interface DashboardMetrics {
+  totalRevenue: number;
+  totalProfit: number;
+  totalLoads: number;
+  averageRevenuePerLoad: number;
+  averageProfitPerLoad: number;
+  averageMargin: number;
+  totalDriverPay: number;
+  totalExpenses: number;
+
+  otrMetrics: {
+    totalRevenue: number;
+    totalProfit: number;
+    totalLoads: number;
+    averageMargin: number;
+  };
+
+  localDrayageMetrics: {
+    totalRevenue: number;
+    totalProfit: number;
+    totalLoads: number;
+    averageMargin: number;
+  };
+
+  serviceTypeBreakdown: ServiceTypeMetric[];
+  customerBreakdown: CustomerMetric[];
+  monthlyBreakdown: MonthlyMetric[];
+  driverPerformance: DriverMetric[];
+}
+
+export interface ServiceTypeMetric {
+  serviceType: string;
+  revenue: number;
+  profit: number;
+  loads: number;
+  margin: number;
+}
+
+export interface CustomerMetric {
+  customer: string;
+  revenue: number;
+  profit: number;
+  loads: number;
+  margin: number;
+}
+
+export interface MonthlyMetric {
+  month: string;
+  revenue: number;
+  profit: number;
+  loads: number;
+  margin: number;
+  driverPay: number;
+  expenses: number;
+}
+
+export interface DriverMetric {
+  driver: string;
+  revenue: number;
+  profit: number;
+  loads: number;
+  margin: number;
+  totalPay: number;
+}
