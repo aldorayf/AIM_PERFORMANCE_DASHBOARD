@@ -54,7 +54,33 @@ A comprehensive performance dashboard for AIM Trucking Services, Inc., tracking 
 - **Papa Parse** - CSV data parsing
 - **date-fns** - Date formatting and manipulation
 
-## Getting Started
+## 🌐 Web Deployment
+
+This dashboard is ready to deploy as a web application!
+
+### Quick Deploy to Vercel (Recommended - Free)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/aldorayf/AIM_PERFORMANCE_DASHBOARD)
+
+**Or deploy manually:**
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy to production
+npm run deploy
+```
+
+Your dashboard will be live at `https://your-project.vercel.app` in minutes!
+
+**See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions** including:
+- Vercel deployment
+- Netlify deployment
+- GitHub Pages deployment
+- Custom domain setup
+
+## Getting Started (Local Development)
 
 ### Prerequisites
 - Node.js 18+ installed
