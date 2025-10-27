@@ -25,7 +25,7 @@ export default function Dashboard() {
 
         // Load CSV files
         const [profitabilityResponse, otrResponse] = await Promise.all([
-          fetch('/2025-10-24T12_17_08.377Z-profitability.csv'),
+          fetch('/2025-10-27T20_17_37.128Z-profitability.csv'),
           fetch('/AIM TRUCK OTR  - COMPLETED RUNS.csv'),
         ]);
 

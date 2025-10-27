@@ -10,7 +10,7 @@ function extractLoadId(loadNumber) {
 console.log('Finding OTR loads not in profitability report...\n');
 
 // Read Profitability CSV to get all load IDs
-const profitCsvPath = path.join(__dirname, '../public/2025-10-24T12_17_08.377Z-profitability.csv');
+const profitCsvPath = path.join(__dirname, '../public/2025-10-27T20_17_37.128Z-profitability.csv');
 const profitCsvContent = fs.readFileSync(profitCsvPath, 'utf-8');
 
 const profitabilityLoadIds = new Set();

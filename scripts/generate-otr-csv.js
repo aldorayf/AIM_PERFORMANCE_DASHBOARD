@@ -43,7 +43,7 @@ Papa.parse(otrCsvContent, {
 console.log(`Found ${otrLoadIds.size} OTR loads in reference CSV`);
 
 // Read Profitability CSV
-const profitCsvPath = path.join(__dirname, '../public/2025-10-24T12_17_08.377Z-profitability.csv');
+const profitCsvPath = path.join(__dirname, '../public/2025-10-27T20_17_37.128Z-profitability.csv');
 const profitCsvContent = fs.readFileSync(profitCsvPath, 'utf-8');
 
 const otrRecords = [];
