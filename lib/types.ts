@@ -74,6 +74,8 @@ export interface CustomerMetric {
 export interface MonthlyMetric {
   month: string;
   revenue: number;
+  otrRevenue: number;
+  localDrayageRevenue: number;
   profit: number;
   loads: number;
   margin: number;

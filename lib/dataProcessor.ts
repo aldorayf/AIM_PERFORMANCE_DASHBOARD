@@ -197,6 +197,8 @@ export function calculateDashboardMetrics(
         monthMap.set(monthKey, {
           month: monthKey,
           revenue: 0,
+          otrRevenue: 0,
+          localDrayageRevenue: 0,
           profit: 0,
           loads: 0,
           margin: 0,
@@ -206,6 +208,14 @@ export function calculateDashboardMetrics(
       }
       const metric = monthMap.get(monthKey)!;
       metric.revenue += record.totalCharges;
+
+      // Split revenue between OTR and Local Drayage
+      if (record.isOTR) {
+        metric.otrRevenue += record.totalCharges;
+      } else {
+        metric.localDrayageRevenue += record.totalCharges;
+      }
+
       metric.profit += record.profit;
       metric.loads += 1;
       metric.driverPay += record.driverPayTotal;

@@ -30,7 +30,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
   return (
     <div className="bg-[#1a2332] rounded-lg p-6 border border-[#2d3748]">
       <h3 className="text-lg font-semibold text-white mb-4">
-        Monthly Revenue & Profit Trends
+        Monthly Revenue & Profit Trends (OTR vs Local Drayage)
       </h3>
       <ResponsiveContainer width="100%" height={400}>
         <AreaChart
@@ -38,9 +38,13 @@ export default function RevenueChart({ data }: RevenueChartProps) {
           margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
         >
           <defs>
-            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="colorOTRRevenue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
               <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorLocalRevenue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
@@ -77,11 +81,19 @@ export default function RevenueChart({ data }: RevenueChartProps) {
           />
           <Area
             type="monotone"
-            dataKey="revenue"
+            dataKey="otrRevenue"
             stroke="#3b82f6"
             fillOpacity={1}
-            fill="url(#colorRevenue)"
-            name="Revenue"
+            fill="url(#colorOTRRevenue)"
+            name="OTR Revenue"
+          />
+          <Area
+            type="monotone"
+            dataKey="localDrayageRevenue"
+            stroke="#06b6d4"
+            fillOpacity={1}
+            fill="url(#colorLocalRevenue)"
+            name="Local Drayage Revenue"
           />
           <Area
             type="monotone"
