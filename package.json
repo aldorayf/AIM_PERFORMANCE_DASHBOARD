@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "deploy": "vercel --prod",
-    "deploy:preview": "vercel"
+    "deploy:preview": "vercel",
+    "generate-otr-csv": "node scripts/generate-otr-csv.js"
   },
   "dependencies": {
     "next": "^14.2.0",

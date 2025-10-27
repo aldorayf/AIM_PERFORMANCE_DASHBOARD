@@ -153,11 +153,25 @@ The dashboard features a modern, dark-themed interface inspired by professional 
 
 ## Data Processing
 
-- Automatically identifies OTR loads by cross-referencing the OTR CSV
-- Filters pass-through charges (transload, unloading) from profitability calculations
-- Handles multiple service types per load
-- Calculates aggregate metrics across all dimensions
-- Parses various date formats and currency values
+- **OTR Load Identification**: Automatically identifies OTR loads by cross-referencing the OTR CSV with profitability data
+- **Service Type Conversion**: Converts "Base Price" to "OTR LINEHAUL" for all loads identified as OTR
+- **Pass-through Filtering**: Filters pass-through charges (transload, unloading) from profitability calculations
+- **Multi-Service Handling**: Handles multiple service types per load
+- **Aggregate Metrics**: Calculates aggregate metrics across all dimensions
+- **Data Parsing**: Parses various date formats and currency values
+
+### OTR CSV Export
+
+Generate a separate CSV file of all OTR loads:
+
+```bash
+npm run generate-otr-csv
+```
+
+This creates `public/OTR-Loads-From-Profitability.csv` containing 787 OTR loads with:
+- All profitability metrics
+- "Base Price" converted to "OTR LINEHAUL"
+- Ready for spreadsheet analysis
 
 ## Future Enhancements
 
