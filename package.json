@@ -9,7 +9,8 @@
     "lint": "next lint",
     "deploy": "vercel --prod",
     "deploy:preview": "vercel",
-    "generate-otr-csv": "node scripts/generate-otr-csv.js"
+    "generate-otr-csv": "node scripts/generate-otr-csv.js",
+    "find-unmatched-otr": "node scripts/find-unmatched-otr.js"
   },
   "dependencies": {
     "next": "^14.2.0",

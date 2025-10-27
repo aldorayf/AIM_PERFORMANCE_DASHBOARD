@@ -117,7 +117,8 @@ npm start
 
 The dashboard uses two main CSV files located in the `public` directory:
 
-1. **2025-10-24T12_17_08.377Z-profitability.csv** - Complete profitability report with all loads
+1. **2025-10-27T20_17_37.128Z-profitability.csv** - Complete profitability report with all loads (Latest)
+   - 2,742 total loads
    - Load numbers
    - Revenue and profit data
    - Driver assignments
@@ -168,7 +169,7 @@ Generate a separate CSV file of all OTR loads:
 npm run generate-otr-csv
 ```
 
-This creates `public/OTR-Loads-From-Profitability.csv` containing 787 OTR loads with:
+This creates `public/OTR-Loads-From-Profitability.csv` containing 790 OTR loads with:
 - All profitability metrics
 - "Base Price" converted to "OTR LINEHAUL"
 - Ready for spreadsheet analysis

@@ -33,3 +33,43 @@ This allows you to:
 - Track OTR loads separately from local drayage
 - Analyze OTR profitability in spreadsheet software
 - Archive historical OTR performance data
+
+---
+
+## find-unmatched-otr.js
+
+Identifies OTR loads that are in the completed runs CSV but missing from the profitability report.
+
+### Usage
+
+```bash
+npm run find-unmatched-otr
+```
+
+### Output
+
+Creates `public/OTR-Loads-Not-In-Profitability.csv` containing:
+- All OTR loads from the completed runs CSV that are NOT in profitability data
+- Full load details (container, customer, delivery date, driver, etc.)
+- Status marked as "Not Found in Profitability Report"
+- Match statistics showing percentage of found vs. missing loads
+
+### Details
+
+The script:
+1. Reads all load IDs from the profitability CSV
+2. Reads all OTR load IDs from the completed runs CSV
+3. Identifies loads in OTR CSV that don't exist in profitability CSV
+4. Exports unmatched loads with all available details
+5. Shows statistics: Total OTR loads, matched count, unmatched count
+
+**Current Results:**
+- Total OTR loads: 982
+- Matched: 789 (80.3%)
+- Not matched: 193 (19.7%)
+
+This helps you:
+- Identify missing invoices or unbilled loads
+- Find loads that need to be added to profitability tracking
+- Reconcile completed OTR runs with financial records
+- Investigate discrepancies between operations and accounting
