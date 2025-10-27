@@ -77,6 +77,8 @@ export interface MonthlyMetric {
   otrRevenue: number;
   localDrayageRevenue: number;
   profit: number;
+  otrProfit: number;
+  localDrayageProfit: number;
   loads: number;
   margin: number;
   driverPay: number;

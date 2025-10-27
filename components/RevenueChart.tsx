@@ -46,9 +46,13 @@ export default function RevenueChart({ data }: RevenueChartProps) {
               <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8} />
               <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
             </linearGradient>
-            <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="colorOTRProfit" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
               <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorLocalProfit" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#34d399" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorDriverPay" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
@@ -97,11 +101,19 @@ export default function RevenueChart({ data }: RevenueChartProps) {
           />
           <Area
             type="monotone"
-            dataKey="profit"
+            dataKey="otrProfit"
             stroke="#10b981"
             fillOpacity={1}
-            fill="url(#colorProfit)"
-            name="Profit"
+            fill="url(#colorOTRProfit)"
+            name="OTR Profit"
+          />
+          <Area
+            type="monotone"
+            dataKey="localDrayageProfit"
+            stroke="#34d399"
+            fillOpacity={1}
+            fill="url(#colorLocalProfit)"
+            name="Local Drayage Profit"
           />
           <Area
             type="monotone"
