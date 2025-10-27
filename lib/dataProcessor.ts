@@ -72,10 +72,21 @@ export async function parseProfitabilityData(
           const loadId = extractLoadId(loadNumber);
           const isOTR = otrLoadIds.has(loadId);
 
-          const chargesType = row['Charges Type']
+          let chargesType = row['Charges Type']
             ?.split(',')
             .map((c: string) => c.trim())
             .filter((c: string) => c) || [];
+
+          // If this is an OTR load, replace "Base Price" with "OTR LINEHAUL"
+          if (isOTR) {
+            chargesType = chargesType.map((charge: string) =>
+              charge === 'Base Price' ? 'OTR LINEHAUL' : charge
+            );
+            // If chargesType is empty or only had Base Price, ensure OTR LINEHAUL is included
+            if (chargesType.length === 0) {
+              chargesType = ['OTR LINEHAUL'];
+            }
+          }
 
           records.push({
             loadNumber,
@@ -274,4 +285,46 @@ export function calculateDashboardMetrics(
       (a, b) => b.revenue - a.revenue
     ),
   };
+}
+
+export function exportOTRLoadsToCSV(records: ProfitabilityRecord[]): string {
+  const otrRecords = records.filter(r => r.isOTR);
+
+  // CSV header
+  const headers = [
+    'Load #',
+    'Container #',
+    'Customer',
+    'Date',
+    'Driver',
+    'Charges Type',
+    'Total Charges',
+    'Driver Pay Total',
+    'Expense Total',
+    'Profit',
+    'Profit Margin'
+  ];
+
+  // CSV rows
+  const rows = otrRecords.map(record => [
+    record.loadNumber,
+    record.containerNumber,
+    record.customer,
+    record.date,
+    record.driver,
+    record.chargesType.join(', '),
+    `$${record.totalCharges.toFixed(2)}`,
+    `$${record.driverPayTotal.toFixed(2)}`,
+    `$${record.expenseTotal.toFixed(2)}`,
+    `$${record.profit.toFixed(2)}`,
+    `${record.profitMargin.toFixed(2)}%`
+  ]);
+
+  // Combine headers and rows
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+  ].join('\n');
+
+  return csvContent;
 }
