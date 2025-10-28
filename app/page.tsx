@@ -5,6 +5,7 @@ import MetricCard from '@/components/MetricCard';
 import DataTable from '@/components/DataTable';
 import RevenueChart from '@/components/RevenueChart';
 import ServiceTypeChart from '@/components/ServiceTypeChart';
+import QuarterlyPLChart from '@/components/QuarterlyPLChart';
 import type { DashboardMetrics, ProfitabilityRecord, DateRange } from '@/lib/types';
 import {
   parseProfitabilityData,
@@ -12,7 +13,7 @@ import {
   calculateDashboardMetrics,
   filterRecordsByDateRange,
 } from '@/lib/dataProcessor';
-import { parsePLData } from '@/lib/plParser';
+import { parsePLData, type QuarterlyPLMetric } from '@/lib/plParser';
 
 // Define date range options
 const DATE_RANGES: DateRange[] = [
@@ -39,6 +40,7 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'financial' | 'operations' | 'customers'>('financial');
   const [allRecords, setAllRecords] = useState<ProfitabilityRecord[]>([]);
+  const [quarterlyMetrics, setQuarterlyMetrics] = useState<QuarterlyPLMetric[]>([]);
   const [selectedDateRangeIndex, setSelectedDateRangeIndex] = useState(2); // Default to 2024 Q4 - 2025 Q3
 
   // Load initial data once
@@ -94,6 +96,9 @@ export default function Dashboard() {
 
         // Parse P&L data with date range filter
         const plSummary = await parsePLData(selectedRange.startDate, selectedRange.endDate);
+
+        // Set quarterly metrics for chart
+        setQuarterlyMetrics(plSummary.quarterlyMetrics);
 
         // Calculate metrics for filtered records
         const dashboardMetrics = calculateDashboardMetrics(filteredRecords, plSummary);
@@ -485,6 +490,7 @@ export default function Dashboard() {
         {/* Financial Tab */}
         {activeTab === 'financial' && (
           <div className="space-y-8">
+            <QuarterlyPLChart data={quarterlyMetrics} />
             <RevenueChart data={metrics.monthlyBreakdown} />
             <ServiceTypeChart data={metrics.serviceTypeBreakdown} />
 

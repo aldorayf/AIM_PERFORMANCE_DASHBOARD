@@ -5,6 +5,10 @@ export interface QuarterlyPL {
   year: number;
   dateRange: string;
 
+  // Overall P&L totals
+  totalIncome: number;
+  totalExpenses: number;
+
   // Yard Storage
   yardStorageIncome: number;
   rentExpense: number;
@@ -29,8 +33,15 @@ export interface QuarterlyPL {
   };
 }
 
+export interface QuarterlyPLMetric {
+  period: string; // e.g., "Q1 2023"
+  totalRevenue: number;
+  totalExpenses: number;
+}
+
 export interface PLSummary {
   quarters: QuarterlyPL[];
+  quarterlyMetrics: QuarterlyPLMetric[];
   yardStorage: {
     totalIncome: number;
     totalExpenses: number;
@@ -98,6 +109,8 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
           quarter: quarterInfo.quarter,
           year: quarterInfo.year,
           dateRange,
+          totalIncome: 0,
+          totalExpenses: 0,
           yardStorageIncome: 0,
           rentExpense: 0,
           utilities: 0,
@@ -126,7 +139,7 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
           const label = row[0]?.trim() || '';
           const value = row[1]?.trim() || '';
 
-          // Track sections
+          // Track sections and capture totals
           if (label === 'Income') {
             inIncomeSection = true;
             inExpenseSection = false;
@@ -137,11 +150,18 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
             inExpenseSection = true;
             continue;
           }
-          if (label.startsWith('Total for Income') || label.startsWith('Net Operating Income')) {
+          if (label.startsWith('Total for Income')) {
+            plData.totalIncome = parseAmount(value);
             inIncomeSection = false;
+            continue;
           }
           if (label.startsWith('Total for Expenses')) {
+            plData.totalExpenses = parseAmount(value);
             inExpenseSection = false;
+            continue;
+          }
+          if (label.startsWith('Net Operating Income')) {
+            inIncomeSection = false;
           }
 
           // Extract Yard Storage income
@@ -282,8 +302,23 @@ export async function parsePLData(startDate?: Date, endDate?: Date): Promise<PLS
 
   const netProfit = totalIncome - totalExpenses - startupCosts;
 
+  // Create quarterly metrics for the chart
+  const quarterlyMetrics: QuarterlyPLMetric[] = quarters
+    .sort((a, b) => {
+      // Sort by year then by quarter
+      if (a.year !== b.year) return a.year - b.year;
+      const quarterOrder = { 'Q1': 1, 'Q2': 2, 'Q3': 3, 'Q4': 4 };
+      return quarterOrder[a.quarter as keyof typeof quarterOrder] - quarterOrder[b.quarter as keyof typeof quarterOrder];
+    })
+    .map(q => ({
+      period: `${q.quarter} ${q.year}`,
+      totalRevenue: q.totalIncome,
+      totalExpenses: q.totalExpenses,
+    }));
+
   return {
     quarters,
+    quarterlyMetrics,
     yardStorage: {
       totalIncome,
       totalExpenses,
