@@ -39,9 +39,15 @@ export interface QuarterlyPLMetric {
   totalExpenses: number;
 }
 
+export interface QuarterlyComparisonMetric {
+  quarter: string; // Q1, Q2, Q3, or Q4
+  [key: string]: string | number; // revenue2023, expenses2023, revenue2024, etc.
+}
+
 export interface PLSummary {
   quarters: QuarterlyPL[];
   quarterlyMetrics: QuarterlyPLMetric[];
+  quarterlyComparison: QuarterlyComparisonMetric[];
   yardStorage: {
     totalIncome: number;
     totalExpenses: number;
@@ -316,9 +322,34 @@ export async function parsePLData(startDate?: Date, endDate?: Date): Promise<PLS
       totalExpenses: q.totalExpenses,
     }));
 
+  // Create quarterly comparison data (Q1-Q4 on x-axis, multiple years as lines)
+  const comparisonMap: Record<string, QuarterlyComparisonMetric> = {
+    'Q1': { quarter: 'Q1' },
+    'Q2': { quarter: 'Q2' },
+    'Q3': { quarter: 'Q3' },
+    'Q4': { quarter: 'Q4' },
+  };
+
+  // Populate data for each year
+  quarters.forEach(q => {
+    const key = q.quarter;
+    if (comparisonMap[key]) {
+      comparisonMap[key][`revenue${q.year}`] = q.totalIncome;
+      comparisonMap[key][`expenses${q.year}`] = q.totalExpenses;
+    }
+  });
+
+  const quarterlyComparison: QuarterlyComparisonMetric[] = [
+    comparisonMap['Q1'],
+    comparisonMap['Q2'],
+    comparisonMap['Q3'],
+    comparisonMap['Q4'],
+  ];
+
   return {
     quarters,
     quarterlyMetrics,
+    quarterlyComparison,
     yardStorage: {
       totalIncome,
       totalExpenses,

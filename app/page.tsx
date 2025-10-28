@@ -13,7 +13,7 @@ import {
   calculateDashboardMetrics,
   filterRecordsByDateRange,
 } from '@/lib/dataProcessor';
-import { parsePLData, type QuarterlyPLMetric } from '@/lib/plParser';
+import { parsePLData, type QuarterlyComparisonMetric } from '@/lib/plParser';
 
 // Define date range options
 const DATE_RANGES: DateRange[] = [
@@ -40,7 +40,7 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'financial' | 'operations' | 'customers'>('financial');
   const [allRecords, setAllRecords] = useState<ProfitabilityRecord[]>([]);
-  const [quarterlyMetrics, setQuarterlyMetrics] = useState<QuarterlyPLMetric[]>([]);
+  const [quarterlyComparison, setQuarterlyComparison] = useState<QuarterlyComparisonMetric[]>([]);
   const [selectedDateRangeIndex, setSelectedDateRangeIndex] = useState(2); // Default to 2024 Q4 - 2025 Q3
 
   // Load initial data once
@@ -97,8 +97,8 @@ export default function Dashboard() {
         // Parse P&L data with date range filter
         const plSummary = await parsePLData(selectedRange.startDate, selectedRange.endDate);
 
-        // Set quarterly metrics for chart
-        setQuarterlyMetrics(plSummary.quarterlyMetrics);
+        // Set quarterly comparison data for chart
+        setQuarterlyComparison(plSummary.quarterlyComparison);
 
         // Calculate metrics for filtered records
         const dashboardMetrics = calculateDashboardMetrics(filteredRecords, plSummary);
@@ -490,7 +490,7 @@ export default function Dashboard() {
         {/* Financial Tab */}
         {activeTab === 'financial' && (
           <div className="space-y-8">
-            <QuarterlyPLChart data={quarterlyMetrics} />
+            <QuarterlyPLChart data={quarterlyComparison} />
             <RevenueChart data={metrics.monthlyBreakdown} />
             <ServiceTypeChart data={metrics.serviceTypeBreakdown} />
 
