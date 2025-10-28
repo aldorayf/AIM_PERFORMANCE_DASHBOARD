@@ -11,6 +11,7 @@ import {
   parseOTRData,
   calculateDashboardMetrics,
 } from '@/lib/dataProcessor';
+import { parsePLData } from '@/lib/plParser';
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -25,7 +26,7 @@ export default function Dashboard() {
 
         // Load CSV files
         const [profitabilityResponse, otrResponse] = await Promise.all([
-          fetch('/2025-10-27T20_17_37.128Z-profitability.csv'),
+          fetch('/2025-10-28T12_02_21.626Z-profitability.csv'),
           fetch('/AIM TRUCK OTR  - COMPLETED RUNS.csv'),
         ]);
 
@@ -40,8 +41,11 @@ export default function Dashboard() {
         const otrLoadIds = await parseOTRData(otrText);
         const records = await parseProfitabilityData(profitabilityText, otrLoadIds);
 
+        // Parse P&L data
+        const plSummary = await parsePLData();
+
         // Calculate metrics
-        const dashboardMetrics = calculateDashboardMetrics(records);
+        const dashboardMetrics = calculateDashboardMetrics(records, plSummary);
         setMetrics(dashboardMetrics);
       } catch (err) {
         console.error('Error loading data:', err);
@@ -126,10 +130,10 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* OTR vs Local Drayage Comparison */}
+        {/* Three Business Lines Comparison */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">OTR vs Local Drayage</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <h2 className="text-xl font-semibold mb-4">Business Lines Overview</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* OTR Card */}
             <div className="bg-[#1a2332] rounded-lg p-6 border border-[#2d3748]">
               <h3 className="text-lg font-semibold mb-4 text-blue-400">
@@ -157,6 +161,10 @@ export default function Dashboard() {
                   <span className="font-semibold">
                     {formatPercent((metrics.otrMetrics.totalRevenue / metrics.totalRevenue) * 100)}
                   </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400 text-sm">Manager:</span>
+                  <span className="text-sm">Sarah Outland</span>
                 </div>
               </div>
             </div>
@@ -189,6 +197,183 @@ export default function Dashboard() {
                     {formatPercent((metrics.localDrayageMetrics.totalRevenue / metrics.totalRevenue) * 100)}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400 text-sm">Manager:</span>
+                  <span className="text-sm">Bobby Lacy</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Yard Storage Card */}
+            <div className="bg-[#1a2332] rounded-lg p-6 border border-[#2d3748]">
+              <h3 className="text-lg font-semibold mb-4 text-yellow-400">
+                Yard Storage
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Start Date:</span>
+                  <span className="font-semibold text-sm">{metrics.yardStorageMetrics.startDate}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Total Income:</span>
+                  <span className="font-semibold">{formatCurrency(metrics.yardStorageMetrics.totalIncome)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Total Expenses:</span>
+                  <span className="font-semibold text-red-400">{formatCurrency(metrics.yardStorageMetrics.totalExpenses)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Startup Costs:</span>
+                  <span className="font-semibold text-orange-400">{formatCurrency(metrics.yardStorageMetrics.startupCosts)}</span>
+                </div>
+                <div className="flex justify-between pt-3 border-t border-[#2d3748]">
+                  <span className="text-gray-400">Net Profit:</span>
+                  <span className={`font-semibold ${metrics.yardStorageMetrics.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatCurrency(metrics.yardStorageMetrics.netProfit)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Manager Performance */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Manager Performance & Bonuses</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {metrics.managerMetrics.map((manager) => (
+              <div key={manager.name} className="bg-[#1a2332] rounded-lg p-6 border border-[#2d3748]">
+                <h3 className="text-lg font-semibold mb-4 text-blue-400">
+                  {manager.name}
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Business Line:</span>
+                    <span className="font-semibold">{manager.businessLine}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Annual Overhead:</span>
+                    <span className="font-semibold">{formatCurrency(manager.annualOverhead)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Business Profit:</span>
+                    <span className="font-semibold text-green-400">{formatCurrency(manager.businessProfit)}</span>
+                  </div>
+                  <div className="flex justify-between pt-3 border-t border-[#2d3748]">
+                    <span className="text-gray-400">Bonus Threshold:</span>
+                    <span className="font-semibold">{formatCurrency(manager.bonusThreshold)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Bonus Eligible:</span>
+                    <span className={`font-semibold ${manager.bonusEligible ? 'text-green-400' : 'text-gray-400'}`}>
+                      {manager.bonusEligible ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  {manager.bonusEligible && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Bonus Amount (5%):</span>
+                      <span className="font-semibold text-green-400">{formatCurrency(manager.bonusAmount)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Business Analysis */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Business Analysis & Insights</h2>
+          <div className="bg-[#1a2332] rounded-lg p-6 border border-[#2d3748]">
+            <div className="space-y-6">
+              {/* Overall Company Performance */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-blue-400">Overall Company Performance</h3>
+                <p className="text-gray-300 leading-relaxed">
+                  AIM Trucking Services has generated <span className="text-green-400 font-semibold">{formatCurrency(metrics.totalRevenue)}</span> in total revenue
+                  with a gross profit of <span className="text-green-400 font-semibold">{formatCurrency(metrics.totalProfit)}</span> ({formatPercent(metrics.averageMargin)} margin)
+                  across {metrics.totalLoads} loads. The company operates three distinct business lines, each contributing to the overall performance.
+                </p>
+              </div>
+
+              {/* OTR Analysis */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-blue-400">Over the Road (OTR) - Started May 2024</h3>
+                <p className="text-gray-300 leading-relaxed">
+                  The OTR division, managed by Sarah Outland, has processed {metrics.otrMetrics.totalLoads} loads generating
+                  <span className="text-green-400 font-semibold"> {formatCurrency(metrics.otrMetrics.totalRevenue)}</span> in revenue
+                  ({formatPercent((metrics.otrMetrics.totalRevenue / metrics.totalRevenue) * 100)} of total) with a profit of
+                  <span className="text-green-400 font-semibold"> {formatCurrency(metrics.otrMetrics.totalProfit)}</span> at
+                  a {formatPercent(metrics.otrMetrics.averageMargin)} margin.
+                  {metrics.managerMetrics[0].bonusEligible ? (
+                    <span className="text-green-400"> Sarah has earned a performance bonus of {formatCurrency(metrics.managerMetrics[0].bonusAmount)} for exceeding the ${formatCurrency(metrics.managerMetrics[0].bonusThreshold)} profit threshold.</span>
+                  ) : (
+                    <span className="text-gray-400"> The division needs {formatCurrency(metrics.managerMetrics[0].bonusThreshold - metrics.otrMetrics.totalProfit)} more in profit to reach the bonus threshold.</span>
+                  )}
+                </p>
+              </div>
+
+              {/* Local Drayage Analysis */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-green-400">Local Drayage - Started January 2023</h3>
+                <p className="text-gray-300 leading-relaxed">
+                  Local Drayage, managed by Bobby Lacy, is the foundation business line with {metrics.localDrayageMetrics.totalLoads} loads,
+                  generating <span className="text-green-400 font-semibold">{formatCurrency(metrics.localDrayageMetrics.totalRevenue)}</span> in revenue
+                  ({formatPercent((metrics.localDrayageMetrics.totalRevenue / metrics.totalRevenue) * 100)} of total) with a profit of
+                  <span className="text-green-400 font-semibold"> {formatCurrency(metrics.localDrayageMetrics.totalProfit)}</span> at
+                  a {formatPercent(metrics.localDrayageMetrics.averageMargin)} margin.
+                  {metrics.managerMetrics[1].bonusEligible ? (
+                    <span className="text-green-400"> Bobby has earned a performance bonus of {formatCurrency(metrics.managerMetrics[1].bonusAmount)} for exceeding the {formatCurrency(metrics.managerMetrics[1].bonusThreshold)} profit threshold.</span>
+                  ) : (
+                    <span className="text-gray-400"> The division needs {formatCurrency(metrics.managerMetrics[1].bonusThreshold - metrics.localDrayageMetrics.totalProfit)} more in profit to reach the bonus threshold.</span>
+                  )}
+                </p>
+              </div>
+
+              {/* Yard Storage Analysis */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-yellow-400">Yard Storage - Started January 2025</h3>
+                <p className="text-gray-300 leading-relaxed">
+                  The newest business line, Yard Storage, launched in January 2025 and has generated
+                  <span className="text-green-400 font-semibold"> {formatCurrency(metrics.yardStorageMetrics.totalIncome)}</span> in income
+                  with operating expenses of <span className="text-red-400 font-semibold">{formatCurrency(metrics.yardStorageMetrics.totalExpenses)}</span> (rent and utilities).
+                  After accounting for startup costs of <span className="text-orange-400 font-semibold">{formatCurrency(metrics.yardStorageMetrics.startupCosts)}</span>
+                  (repairs, maintenance, and equipment rental from December 2024 - May 2025),
+                  the division shows a net {metrics.yardStorageMetrics.netProfit >= 0 ? 'profit' : 'loss'} of
+                  <span className={`font-semibold ${metrics.yardStorageMetrics.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {' '}{formatCurrency(Math.abs(metrics.yardStorageMetrics.netProfit))}
+                  </span>.
+                  {metrics.yardStorageMetrics.netProfit >= 0 ? (
+                    <span className="text-green-400"> This represents a successful launch with positive returns in the initial operating period.</span>
+                  ) : (
+                    <span className="text-yellow-400"> This is expected for a new business line during its startup phase. Performance should improve as the operation matures and startup costs are fully amortized.</span>
+                  )}
+                </p>
+              </div>
+
+              {/* Strategic Insights */}
+              <div className="pt-4 border-t border-[#2d3748]">
+                <h3 className="text-lg font-semibold mb-3 text-purple-400">Strategic Insights</h3>
+                <ul className="space-y-2 text-gray-300">
+                  <li className="flex items-start">
+                    <span className="text-purple-400 mr-2">•</span>
+                    <span>Average revenue per load: <span className="text-green-400 font-semibold">{formatCurrency(metrics.averageRevenuePerLoad)}</span> with
+                    average profit per load of <span className="text-green-400 font-semibold">{formatCurrency(metrics.averageProfitPerLoad)}</span></span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-purple-400 mr-2">•</span>
+                    <span>Total manager overhead: <span className="font-semibold">{formatCurrency(metrics.managerMetrics.reduce((sum, m) => sum + m.annualOverhead, 0))}</span> with
+                    potential bonuses totaling <span className="text-green-400 font-semibold">{formatCurrency(metrics.managerMetrics.reduce((sum, m) => sum + m.bonusAmount, 0))}</span></span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-purple-400 mr-2">•</span>
+                    <span>Portfolio diversification across three business lines provides revenue stability and growth opportunities</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-purple-400 mr-2">•</span>
+                    <span>Strong operational execution with {formatPercent((metrics.otrMetrics.totalLoads + metrics.localDrayageMetrics.totalLoads) / metrics.totalLoads * 100)} of loads successfully tracked</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>

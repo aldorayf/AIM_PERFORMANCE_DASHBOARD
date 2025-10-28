@@ -8,7 +8,10 @@ import type {
   CustomerMetric,
   MonthlyMetric,
   DriverMetric,
+  ManagerMetrics,
+  YardStorageMetrics,
 } from './types';
+import type { PLSummary } from './plParser';
 
 // Pass-through charges that should be excluded from profitability analysis
 const PASSTHROUGH_CHARGES = ['transload', 'Unloading', 'unloading'];
@@ -111,7 +114,8 @@ export async function parseProfitabilityData(
 }
 
 export function calculateDashboardMetrics(
-  records: ProfitabilityRecord[]
+  records: ProfitabilityRecord[],
+  plSummary?: PLSummary
 ): DashboardMetrics {
   // Filter out pass-through charges from profitability calculations
   const profitableRecords = records.filter(record => {
@@ -259,6 +263,54 @@ export function calculateDashboardMetrics(
     metric.margin = metric.revenue > 0 ? (metric.profit / metric.revenue) * 100 : 0;
   });
 
+  // Calculate Yard Storage Metrics from P&L data
+  const yardStorageMetrics: YardStorageMetrics = plSummary ? {
+    totalIncome: plSummary.yardStorage.totalIncome,
+    totalExpenses: plSummary.yardStorage.totalExpenses,
+    startupCosts: plSummary.yardStorage.startupCosts,
+    netProfit: plSummary.yardStorage.netProfit,
+    startDate: 'January 2025',
+  } : {
+    totalIncome: 0,
+    totalExpenses: 0,
+    startupCosts: 0,
+    netProfit: 0,
+    startDate: 'January 2025',
+  };
+
+  // Calculate Manager Metrics
+  const managerMetrics: ManagerMetrics[] = [];
+
+  // Sarah Outland - OTR Manager
+  const sarahOverhead = 85545.66;
+  const sarahThreshold = 150000;
+  const sarahBonus = otrProfit > sarahThreshold ? (otrProfit - sarahThreshold) * 0.05 : 0;
+  managerMetrics.push({
+    name: 'Sarah Outland',
+    businessLine: 'OTR',
+    annualOverhead: sarahOverhead,
+    bonusThreshold: sarahThreshold,
+    bonusPercentage: 5,
+    businessProfit: otrProfit,
+    bonusEligible: otrProfit > sarahThreshold,
+    bonusAmount: sarahBonus,
+  });
+
+  // Bobby Lacy - Local Drayage Manager
+  const bobbyOverhead = 101820.66;
+  const bobbyThreshold = 175000;
+  const bobbyBonus = localProfit > bobbyThreshold ? (localProfit - bobbyThreshold) * 0.05 : 0;
+  managerMetrics.push({
+    name: 'Bobby Lacy',
+    businessLine: 'Local Drayage',
+    annualOverhead: bobbyOverhead,
+    bonusThreshold: bobbyThreshold,
+    bonusPercentage: 5,
+    businessProfit: localProfit,
+    bonusEligible: localProfit > bobbyThreshold,
+    bonusAmount: bobbyBonus,
+  });
+
   return {
     totalRevenue,
     totalProfit,
@@ -280,6 +332,8 @@ export function calculateDashboardMetrics(
       totalLoads: localRecords.length,
       averageMargin: localRevenue > 0 ? (localProfit / localRevenue) * 100 : 0,
     },
+    yardStorageMetrics,
+    managerMetrics,
     serviceTypeBreakdown: Array.from(serviceMap.values()).sort(
       (a, b) => b.revenue - a.revenue
     ),
