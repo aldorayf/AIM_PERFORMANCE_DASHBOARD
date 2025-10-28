@@ -5,20 +5,43 @@ import MetricCard from '@/components/MetricCard';
 import DataTable from '@/components/DataTable';
 import RevenueChart from '@/components/RevenueChart';
 import ServiceTypeChart from '@/components/ServiceTypeChart';
-import type { DashboardMetrics } from '@/lib/types';
+import type { DashboardMetrics, ProfitabilityRecord, DateRange } from '@/lib/types';
 import {
   parseProfitabilityData,
   parseOTRData,
   calculateDashboardMetrics,
+  filterRecordsByDateRange,
 } from '@/lib/dataProcessor';
 import { parsePLData } from '@/lib/plParser';
+
+// Define date range options
+const DATE_RANGES: DateRange[] = [
+  {
+    label: '2023 Q1-Q3 (Jan - Sep 2023)',
+    startDate: new Date(2023, 0, 1), // Jan 1, 2023
+    endDate: new Date(2023, 8, 30), // Sep 30, 2023
+  },
+  {
+    label: '2023 Q4 - 2024 Q3 (Oct 2023 - Sep 2024)',
+    startDate: new Date(2023, 9, 1), // Oct 1, 2023
+    endDate: new Date(2024, 8, 30), // Sep 30, 2024
+  },
+  {
+    label: '2024 Q4 - 2025 Q3 (Oct 2024 - Sep 2025)',
+    startDate: new Date(2024, 9, 1), // Oct 1, 2024
+    endDate: new Date(2025, 8, 30), // Sep 30, 2025
+  },
+];
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'financial' | 'operations' | 'customers'>('financial');
+  const [allRecords, setAllRecords] = useState<ProfitabilityRecord[]>([]);
+  const [selectedDateRangeIndex, setSelectedDateRangeIndex] = useState(2); // Default to 2024 Q4 - 2025 Q3
 
+  // Load initial data once
   useEffect(() => {
     async function loadData() {
       try {
@@ -41,12 +64,8 @@ export default function Dashboard() {
         const otrLoadIds = await parseOTRData(otrText);
         const records = await parseProfitabilityData(profitabilityText, otrLoadIds);
 
-        // Parse P&L data
-        const plSummary = await parsePLData();
-
-        // Calculate metrics
-        const dashboardMetrics = calculateDashboardMetrics(records, plSummary);
-        setMetrics(dashboardMetrics);
+        // Store all records
+        setAllRecords(records);
       } catch (err) {
         console.error('Error loading data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -57,6 +76,35 @@ export default function Dashboard() {
 
     loadData();
   }, []);
+
+  // Recalculate metrics when date range or records change
+  useEffect(() => {
+    async function calculateMetrics() {
+      if (allRecords.length === 0) return;
+
+      try {
+        const selectedRange = DATE_RANGES[selectedDateRangeIndex];
+
+        // Filter records by selected date range
+        const filteredRecords = filterRecordsByDateRange(
+          allRecords,
+          selectedRange.startDate,
+          selectedRange.endDate
+        );
+
+        // Parse P&L data with date range filter
+        const plSummary = await parsePLData(selectedRange.startDate, selectedRange.endDate);
+
+        // Calculate metrics for filtered records
+        const dashboardMetrics = calculateDashboardMetrics(filteredRecords, plSummary);
+        setMetrics(dashboardMetrics);
+      } catch (err) {
+        console.error('Error calculating metrics:', err);
+      }
+    }
+
+    calculateMetrics();
+  }, [allRecords, selectedDateRangeIndex]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -98,10 +146,28 @@ export default function Dashboard() {
       {/* Header */}
       <header className="bg-[#1a2332] border-b border-[#2d3748] sticky top-0 z-10">
         <div className="max-w-[1600px] mx-auto px-6 py-4">
-          <h1 className="text-2xl font-bold">AIM Trucking Services Performance Dashboard</h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Performance Overview: Nov 1, 2024 - Oct 31, 2025
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl font-bold">AIM Trucking Services Performance Dashboard</h1>
+              <p className="text-sm text-gray-400 mt-1">
+                Performance Overview: {DATE_RANGES[selectedDateRangeIndex].label}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-gray-400">Date Range:</label>
+              <select
+                value={selectedDateRangeIndex}
+                onChange={(e) => setSelectedDateRangeIndex(Number(e.target.value))}
+                className="bg-[#0f1419] border border-[#2d3748] rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+              >
+                {DATE_RANGES.map((range, index) => (
+                  <option key={index} value={index}>
+                    {range.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -300,15 +366,16 @@ export default function Dashboard() {
               <div>
                 <h3 className="text-lg font-semibold mb-3 text-blue-400">Over the Road (OTR) - Started May 2024</h3>
                 <p className="text-gray-300 leading-relaxed">
-                  The OTR division, managed by Sarah Outland, has processed {metrics.otrMetrics.totalLoads} loads generating
-                  <span className="text-green-400 font-semibold"> {formatCurrency(metrics.otrMetrics.totalRevenue)}</span> in revenue
-                  ({formatPercent((metrics.otrMetrics.totalRevenue / metrics.totalRevenue) * 100)} of total) with a profit of
-                  <span className="text-green-400 font-semibold"> {formatCurrency(metrics.otrMetrics.totalProfit)}</span> at
-                  a {formatPercent(metrics.otrMetrics.averageMargin)} margin.
-                  {metrics.managerMetrics[0].bonusEligible ? (
-                    <span className="text-green-400"> Sarah has earned a performance bonus of {formatCurrency(metrics.managerMetrics[0].bonusAmount)} for exceeding the ${formatCurrency(metrics.managerMetrics[0].bonusThreshold)} profit threshold.</span>
+                  {metrics.otrMetrics.totalLoads > 0 ? (
+                    <>
+                      The OTR division, managed by Sarah Outland, has processed {metrics.otrMetrics.totalLoads} loads generating
+                      <span className="text-green-400 font-semibold"> {formatCurrency(metrics.otrMetrics.totalRevenue)}</span> in revenue
+                      ({formatPercent((metrics.otrMetrics.totalRevenue / (metrics.totalRevenue || 1)) * 100)} of total) with a profit of
+                      <span className="text-green-400 font-semibold"> {formatCurrency(metrics.otrMetrics.totalProfit)}</span> at
+                      a {formatPercent(metrics.otrMetrics.averageMargin)} margin. This business line contributes significantly to the company's overall trucking operations.
+                    </>
                   ) : (
-                    <span className="text-gray-400"> The division needs {formatCurrency(metrics.managerMetrics[0].bonusThreshold - metrics.otrMetrics.totalProfit)} more in profit to reach the bonus threshold.</span>
+                    <span className="text-gray-400">The OTR business line was not active during this period.</span>
                   )}
                 </p>
               </div>
@@ -319,14 +386,9 @@ export default function Dashboard() {
                 <p className="text-gray-300 leading-relaxed">
                   Local Drayage, managed by Bobby Lacy, is the foundation business line with {metrics.localDrayageMetrics.totalLoads} loads,
                   generating <span className="text-green-400 font-semibold">{formatCurrency(metrics.localDrayageMetrics.totalRevenue)}</span> in revenue
-                  ({formatPercent((metrics.localDrayageMetrics.totalRevenue / metrics.totalRevenue) * 100)} of total) with a profit of
+                  ({formatPercent((metrics.localDrayageMetrics.totalRevenue / (metrics.totalRevenue || 1)) * 100)} of total) with a profit of
                   <span className="text-green-400 font-semibold"> {formatCurrency(metrics.localDrayageMetrics.totalProfit)}</span> at
-                  a {formatPercent(metrics.localDrayageMetrics.averageMargin)} margin.
-                  {metrics.managerMetrics[1].bonusEligible ? (
-                    <span className="text-green-400"> Bobby has earned a performance bonus of {formatCurrency(metrics.managerMetrics[1].bonusAmount)} for exceeding the {formatCurrency(metrics.managerMetrics[1].bonusThreshold)} profit threshold.</span>
-                  ) : (
-                    <span className="text-gray-400"> The division needs {formatCurrency(metrics.managerMetrics[1].bonusThreshold - metrics.localDrayageMetrics.totalProfit)} more in profit to reach the bonus threshold.</span>
-                  )}
+                  a {formatPercent(metrics.localDrayageMetrics.averageMargin)} margin. As the original business line, Local Drayage continues to be a core strength of the company.
                 </p>
               </div>
 
@@ -334,19 +396,24 @@ export default function Dashboard() {
               <div>
                 <h3 className="text-lg font-semibold mb-3 text-yellow-400">Yard Storage - Started January 2025</h3>
                 <p className="text-gray-300 leading-relaxed">
-                  The newest business line, Yard Storage, launched in January 2025 and has generated
-                  <span className="text-green-400 font-semibold"> {formatCurrency(metrics.yardStorageMetrics.totalIncome)}</span> in income
-                  with operating expenses of <span className="text-red-400 font-semibold">{formatCurrency(metrics.yardStorageMetrics.totalExpenses)}</span> (rent and utilities).
-                  After accounting for startup costs of <span className="text-orange-400 font-semibold">{formatCurrency(metrics.yardStorageMetrics.startupCosts)}</span>
-                  (repairs, maintenance, and equipment rental from December 2024 - May 2025),
-                  the division shows a net {metrics.yardStorageMetrics.netProfit >= 0 ? 'profit' : 'loss'} of
-                  <span className={`font-semibold ${metrics.yardStorageMetrics.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {' '}{formatCurrency(Math.abs(metrics.yardStorageMetrics.netProfit))}
-                  </span>.
-                  {metrics.yardStorageMetrics.netProfit >= 0 ? (
-                    <span className="text-green-400"> This represents a successful launch with positive returns in the initial operating period.</span>
+                  {metrics.yardStorageMetrics.totalIncome > 0 ? (
+                    <>
+                      The Yard Storage business line has generated
+                      <span className="text-green-400 font-semibold"> {formatCurrency(metrics.yardStorageMetrics.totalIncome)}</span> in income
+                      with operating expenses of <span className="text-red-400 font-semibold">{formatCurrency(metrics.yardStorageMetrics.totalExpenses)}</span> (rent and utilities).
+                      After accounting for startup costs of <span className="text-orange-400 font-semibold">{formatCurrency(metrics.yardStorageMetrics.startupCosts)}</span>,
+                      the division shows a net {metrics.yardStorageMetrics.netProfit >= 0 ? 'profit' : 'loss'} of
+                      <span className={`font-semibold ${metrics.yardStorageMetrics.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {' '}{formatCurrency(Math.abs(metrics.yardStorageMetrics.netProfit))}
+                      </span>.
+                      {metrics.yardStorageMetrics.netProfit >= 0 ? (
+                        <span className="text-green-400"> This represents positive performance for the business line.</span>
+                      ) : (
+                        <span className="text-yellow-400"> This is within expectations for a newer business line.</span>
+                      )}
+                    </>
                   ) : (
-                    <span className="text-yellow-400"> This is expected for a new business line during its startup phase. Performance should improve as the operation matures and startup costs are fully amortized.</span>
+                    <span className="text-gray-400">The Yard Storage business line was not active during this period.</span>
                   )}
                 </p>
               </div>

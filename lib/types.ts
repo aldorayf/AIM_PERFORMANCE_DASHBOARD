@@ -3,6 +3,7 @@ export interface ProfitabilityRecord {
   containerNumber: string;
   customer: string;
   date: string;
+  dateObj: Date; // Add parsed date object for filtering
   driver: string;
   chargesType: string[];
   totalCharges: number;
@@ -11,6 +12,12 @@ export interface ProfitabilityRecord {
   profit: number;
   profitMargin: number;
   isOTR: boolean;
+}
+
+export interface DateRange {
+  label: string;
+  startDate: Date;
+  endDate: Date;
 }
 
 export interface OTRRecord {

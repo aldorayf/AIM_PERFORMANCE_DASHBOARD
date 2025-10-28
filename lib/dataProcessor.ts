@@ -91,11 +91,21 @@ export async function parseProfitabilityData(
             }
           }
 
+          // Parse date to Date object
+          const dateStr = row['Date']?.trim() || '';
+          let dateObj = new Date();
+          try {
+            dateObj = parse(dateStr, 'M/d/yy', new Date());
+          } catch (e) {
+            console.error('Error parsing date:', dateStr, e);
+          }
+
           records.push({
             loadNumber,
             containerNumber: row['Container #']?.trim() || '',
             customer: row['Customer']?.trim() || '',
-            date: row['Date']?.trim() || '',
+            date: dateStr,
+            dateObj,
             driver: row['Driver']?.trim() || '',
             chargesType,
             totalCharges: parseCurrency(row['Total Charges'] || '0'),
@@ -110,6 +120,17 @@ export async function parseProfitabilityData(
       },
       error: (error: Error) => reject(error),
     });
+  });
+}
+
+export function filterRecordsByDateRange(
+  records: ProfitabilityRecord[],
+  startDate: Date,
+  endDate: Date
+): ProfitabilityRecord[] {
+  return records.filter(record => {
+    const recordDate = record.dateObj;
+    return recordDate >= startDate && recordDate <= endDate;
   });
 }
 
