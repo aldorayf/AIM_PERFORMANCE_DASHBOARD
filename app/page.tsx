@@ -68,6 +68,10 @@ export default function Dashboard() {
 
         // Store all records
         setAllRecords(records);
+
+        // Load complete P&L data (all years) for quarterly comparison chart
+        const completePLSummary = await parsePLData(); // No date range filter
+        setQuarterlyComparison(completePLSummary.quarterlyComparison);
       } catch (err) {
         console.error('Error loading data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -94,11 +98,10 @@ export default function Dashboard() {
           selectedRange.endDate
         );
 
-        // Parse P&L data with date range filter
+        // Parse P&L data with date range filter (for yard storage metrics only)
         const plSummary = await parsePLData(selectedRange.startDate, selectedRange.endDate);
 
-        // Set quarterly comparison data for chart
-        setQuarterlyComparison(plSummary.quarterlyComparison);
+        // Note: quarterlyComparison is NOT updated here - it shows all years always
 
         // Calculate metrics for filtered records
         const dashboardMetrics = calculateDashboardMetrics(filteredRecords, plSummary);
