@@ -25,6 +25,25 @@ export interface OTRRecord {
   margin: number;
 }
 
+export interface YardStorageMetrics {
+  totalIncome: number;
+  totalExpenses: number;
+  startupCosts: number;
+  netProfit: number;
+  startDate: string;
+}
+
+export interface ManagerMetrics {
+  name: string;
+  businessLine: string;
+  annualOverhead: number;
+  bonusThreshold: number;
+  bonusPercentage: number;
+  businessProfit: number;
+  bonusEligible: boolean;
+  bonusAmount: number;
+}
+
 export interface DashboardMetrics {
   totalRevenue: number;
   totalProfit: number;
@@ -48,6 +67,10 @@ export interface DashboardMetrics {
     totalLoads: number;
     averageMargin: number;
   };
+
+  yardStorageMetrics: YardStorageMetrics;
+
+  managerMetrics: ManagerMetrics[];
 
   serviceTypeBreakdown: ServiceTypeMetric[];
   customerBreakdown: CustomerMetric[];
