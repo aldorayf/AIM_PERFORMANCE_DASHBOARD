@@ -2,8 +2,8 @@
 
 import React from 'react';
 import {
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,11 +11,18 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import type { QuarterlyPLMetric } from '@/lib/plParser';
+import type { QuarterlyComparisonMetric } from '@/lib/plParser';
 
 interface QuarterlyPLChartProps {
-  data: QuarterlyPLMetric[];
+  data: QuarterlyComparisonMetric[];
 }
+
+// Define colors for different years
+const YEAR_COLORS: Record<string, { revenue: string; expenses: string }> = {
+  '2023': { revenue: '#3b82f6', expenses: '#93c5fd' }, // Blue shades
+  '2024': { revenue: '#10b981', expenses: '#6ee7b7' }, // Green shades
+  '2025': { revenue: '#f59e0b', expenses: '#fcd34d' }, // Orange/Yellow shades
+};
 
 export default function QuarterlyPLChart({ data }: QuarterlyPLChartProps) {
   const formatCurrency = (value: number) => {
@@ -27,29 +34,32 @@ export default function QuarterlyPLChart({ data }: QuarterlyPLChartProps) {
     }).format(value);
   };
 
+  // Determine which years are available in the data
+  const availableYears = new Set<string>();
+  data.forEach(row => {
+    Object.keys(row).forEach(key => {
+      if (key.startsWith('revenue') || key.startsWith('expenses')) {
+        const year = key.replace('revenue', '').replace('expenses', '');
+        if (year) availableYears.add(year);
+      }
+    });
+  });
+
+  const years = Array.from(availableYears).sort();
+
   return (
     <div className="bg-[#1a2332] rounded-lg p-6 border border-[#2d3748]">
       <h3 className="text-lg font-semibold text-white mb-4">
         Quarterly P&L Comparison - Total Revenue vs Total Expenses
       </h3>
       <ResponsiveContainer width="100%" height={400}>
-        <AreaChart
+        <LineChart
           data={data}
           margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
         >
-          <defs>
-            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-            </linearGradient>
-          </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" />
           <XAxis
-            dataKey="period"
+            dataKey="quarter"
             stroke="#9ca3af"
             style={{ fontSize: '12px' }}
           />
@@ -69,25 +79,31 @@ export default function QuarterlyPLChart({ data }: QuarterlyPLChartProps) {
           />
           <Legend
             wrapperStyle={{ color: '#9ca3af' }}
-            iconType="circle"
+            iconType="line"
           />
-          <Area
-            type="monotone"
-            dataKey="totalRevenue"
-            stroke="#10b981"
-            fillOpacity={1}
-            fill="url(#colorRevenue)"
-            name="Total Revenue"
-          />
-          <Area
-            type="monotone"
-            dataKey="totalExpenses"
-            stroke="#ef4444"
-            fillOpacity={1}
-            fill="url(#colorExpenses)"
-            name="Total Expenses"
-          />
-        </AreaChart>
+          {/* Dynamically create lines for each year's revenue and expenses */}
+          {years.map(year => (
+            <React.Fragment key={year}>
+              <Line
+                type="monotone"
+                dataKey={`revenue${year}`}
+                stroke={YEAR_COLORS[year]?.revenue || '#3b82f6'}
+                strokeWidth={2}
+                dot={{ r: 4 }}
+                name={`${year} Revenue`}
+              />
+              <Line
+                type="monotone"
+                dataKey={`expenses${year}`}
+                stroke={YEAR_COLORS[year]?.expenses || '#ef4444'}
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={{ r: 4 }}
+                name={`${year} Expenses`}
+              />
+            </React.Fragment>
+          ))}
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );
