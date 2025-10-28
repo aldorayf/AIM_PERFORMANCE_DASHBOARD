@@ -95,7 +95,7 @@ export async function parseProfitabilityData(
           const dateStr = row['Date']?.trim() || '';
           let dateObj = new Date();
           try {
-            dateObj = parse(dateStr, 'M/d/yy', new Date());
+            dateObj = parse(dateStr, 'M/d/yyyy', new Date());
           } catch (e) {
             console.error('Error parsing date:', dateStr, e);
           }
@@ -215,7 +215,7 @@ export function calculateDashboardMetrics(
   const monthMap = new Map<string, MonthlyMetric>();
   records.forEach(record => {
     try {
-      const date = parse(record.date, 'M/d/yy', new Date());
+      const date = record.dateObj; // Use pre-parsed date object
       const monthKey = format(date, 'MMM yyyy');
 
       if (!monthMap.has(monthKey)) {
