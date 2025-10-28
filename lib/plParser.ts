@@ -209,7 +209,7 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
   });
 }
 
-export async function parsePLData(): Promise<PLSummary> {
+export async function parsePLData(startDate?: Date, endDate?: Date): Promise<PLSummary> {
   const quarters: QuarterlyPL[] = [];
 
   // Load and parse all P&L files
@@ -222,6 +222,34 @@ export async function parsePLData(): Promise<PLSummary> {
       }
       const text = await response.text();
       const plData = await parsePLFile(text, filename);
+
+      // Filter by date range if provided
+      if (startDate && endDate) {
+        // Parse the date range from the P&L quarter
+        const dateRange = plData.dateRange;
+        // Extract dates from format like "January 1-March 31, 2023"
+        const match = dateRange.match(/([A-Za-z]+)\s+(\d+)-([A-Za-z]+)\s+(\d+),\s+(\d+)/);
+        if (match) {
+          const startMonth = match[1];
+          const endMonth = match[3];
+          const year = parseInt(match[5]);
+
+          // Create quarter start and end dates
+          const monthMap: Record<string, number> = {
+            'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
+            'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
+          };
+
+          const quarterStart = new Date(year, monthMap[startMonth], 1);
+          const quarterEnd = new Date(year, monthMap[endMonth] + 1, 0); // Last day of month
+
+          // Check if quarter overlaps with selected date range
+          if (quarterEnd < startDate || quarterStart > endDate) {
+            continue; // Skip this quarter
+          }
+        }
+      }
+
       quarters.push(plData);
     } catch (error) {
       console.error(`Error parsing ${filename}:`, error);
