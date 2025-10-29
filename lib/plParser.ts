@@ -274,12 +274,18 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
             // Payroll & Benefits
             else if (label === 'Payroll Expenses') {
               plData.expenses.payrollExpenses += amount;
-            } else if (label === 'HRA Employee Benefit' || label.startsWith('Total for Health Insurance')) {
+            } else if (label === 'HRA Employee Benefit') {
               plData.expenses.healthInsurance += amount;
+            } else if (label.startsWith('Total for Health Insurance')) {
+              // Use the total if available (it already includes HRA) - REPLACE accumulated value
+              plData.expenses.healthInsurance = amount;
             }
-            // Insurance
-            else if (label === 'Insurance - Commercial' || label === 'Driver Insurance Deduction' ||
-                     label.startsWith('Total for Insurance')) {
+            // Insurance - Use ONLY the total if it exists, otherwise use individual items
+            else if (label.startsWith('Total for Insurance')) {
+              // Replace accumulated insurance value with the total
+              plData.expenses.commercialInsurance = amount;
+            } else if (label === 'Insurance - Commercial' || label === 'Driver Insurance Deduction') {
+              // Only accumulate individual items; will be replaced by Total if it exists
               plData.expenses.commercialInsurance += amount;
             }
             // Facility & Equipment
@@ -292,14 +298,17 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
             } else if (label === 'Repairs and Maintenance') {
               plData.expenses.repairsAndMaintenance += amount;
               plData.repairsAndMaintenance = amount;
-            } else if (label === 'Chassis Rental') {
+            } else if (label.startsWith('Total for Chassis Rental')) {
+              // Use the total if available - REPLACE accumulated value
+              plData.expenses.chassisRental = amount;
+            } else if (label === 'Chassis Rental' || label === 'Repairs - Chassis') {
               plData.expenses.chassisRental += amount;
             } else if (label === 'Equipment Rental Expense') {
               plData.expenses.equipmentRental += amount;
               plData.equipmentRental = amount;
             }
             // Administrative
-            else if (label === 'ACCOUNTING SERVICES EXPENSE') {
+            else if (label === 'ACCOUNTING SERVICES EXPENSE' || label === 'CPA Services') {
               plData.expenses.accountingServices += amount;
             } else if (label === 'Computer and Internet Expenses') {
               plData.expenses.computerAndInternet += amount;
