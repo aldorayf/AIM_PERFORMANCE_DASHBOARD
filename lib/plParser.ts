@@ -1,36 +1,44 @@
 import Papa from 'papaparse';
 
 export interface ExpenseBreakdown {
-  // Driver and Operations Costs
+  // Direct Operations Costs
   driverPay: number; // Base Price + Drayage expenses
   fuel: number;
+  longHaulDrayage: number;
+  hazmat: number;
+  pilotCarEscort: number;
+  placardRemoval: number;
+  overweight: number;
+  oversizedPermit: number;
+  otherOperational: number; // Small operational expenses
 
-  // Pass-through expenses (should net with income)
-  passThrough: number; // Transloading, Warehouse Storage, Palletization, etc.
+  // Pass-Through Costs (should net with income)
+  transloading: number;
+  warehouseStorage: number;
+  shrinkWrap: number;
+  palletization: number;
 
-  // Overhead - Payroll & Benefits
+  // Payroll & Benefits
   payrollExpenses: number;
   healthInsurance: number;
 
-  // Overhead - Insurance
+  // Facility & Equipment
   commercialInsurance: number;
-
-  // Overhead - Facility & Equipment
   rentExpense: number;
   utilities: number;
   repairsAndMaintenance: number;
   chassisRental: number;
   equipmentRental: number;
 
-  // Overhead - Administrative
+  // Administrative & Other
   accountingServices: number;
+  professionalFees: number;
+  depreciation: number;
   computerAndInternet: number;
   bankCharges: number;
   businessLicenses: number;
   advertising: number;
-
-  // Other operating expenses
-  otherExpenses: number;
+  otherAdministrative: number;
 }
 
 export interface QuarterlyPL {
@@ -164,7 +172,17 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
           expenses: {
             driverPay: 0,
             fuel: 0,
-            passThrough: 0,
+            longHaulDrayage: 0,
+            hazmat: 0,
+            pilotCarEscort: 0,
+            placardRemoval: 0,
+            overweight: 0,
+            oversizedPermit: 0,
+            otherOperational: 0,
+            transloading: 0,
+            warehouseStorage: 0,
+            shrinkWrap: 0,
+            palletization: 0,
             payrollExpenses: 0,
             healthInsurance: 0,
             commercialInsurance: 0,
@@ -174,11 +192,13 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
             chassisRental: 0,
             equipmentRental: 0,
             accountingServices: 0,
+            professionalFees: 0,
+            depreciation: 0,
             computerAndInternet: 0,
             bankCharges: 0,
             businessLicenses: 0,
             advertising: 0,
-            otherExpenses: 0,
+            otherAdministrative: 0,
           },
           yardStorageIncome: 0,
           rentExpense: 0,
@@ -260,16 +280,33 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
           if (inExpenseSection) {
             const amount = parseAmount(value);
 
-            // Driver and Operations Costs
+            // Direct Operations Costs
             if (label === 'Base Price' || label === 'Drayage' || label === 'DRAYAGE -CA EXPENSE') {
               plData.expenses.driverPay += amount;
             } else if (label === 'Fuel') {
               plData.expenses.fuel += amount;
+            } else if (label === 'Long Haul Drayage Expense') {
+              plData.expenses.longHaulDrayage += amount;
+            } else if (label === 'Hazmat') {
+              plData.expenses.hazmat += amount;
+            } else if (label === 'Pilot Car Escort') {
+              plData.expenses.pilotCarEscort += amount;
+            } else if (label === 'Placard Removal Cost') {
+              plData.expenses.placardRemoval += amount;
+            } else if (label === 'Overweight') {
+              plData.expenses.overweight += amount;
+            } else if (label === 'Oversized Permit') {
+              plData.expenses.oversizedPermit += amount;
             }
-            // Pass-through expenses
-            else if (label === 'Transloading' || label === 'WAREHOUSE STORAGE' || label === 'A-B PALLET' ||
-                     label === 'Shrink Wrap' || label === 'PALLETIZATION') {
-              plData.expenses.passThrough += amount;
+            // Pass-Through Costs
+            else if (label === 'Transloading') {
+              plData.expenses.transloading += amount;
+            } else if (label === 'WAREHOUSE STORAGE') {
+              plData.expenses.warehouseStorage += amount;
+            } else if (label === 'Shrink Wrap') {
+              plData.expenses.shrinkWrap += amount;
+            } else if (label === 'A-B PALLET' || label === 'PALLETIZATION') {
+              plData.expenses.palletization += amount;
             }
             // Payroll & Benefits
             else if (label === 'Payroll Expenses') {
@@ -307,9 +344,13 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
               plData.expenses.equipmentRental += amount;
               plData.equipmentRental = amount;
             }
-            // Administrative
-            else if (label === 'ACCOUNTING SERVICES EXPENSE' || label === 'CPA Services') {
+            // Administrative & Other
+            else if (label === 'ACCOUNTING SERVICES EXPENSE') {
               plData.expenses.accountingServices += amount;
+            } else if (label === 'CPA Services' || label.startsWith('Total for Professional Fees')) {
+              plData.expenses.professionalFees += amount;
+            } else if (label === 'Depreciation Expense') {
+              plData.expenses.depreciation += amount;
             } else if (label === 'Computer and Internet Expenses') {
               plData.expenses.computerAndInternet += amount;
             } else if (label === 'Bank Service Charges') {
@@ -319,9 +360,16 @@ async function parsePLFile(csvText: string, filename: string): Promise<Quarterly
             } else if (label === 'Advertising') {
               plData.expenses.advertising += amount;
             }
-            // Other expenses (catch-all for items not categorized above)
+            // Small operational expenses (catch-all for uncategorized operational items)
+            else if (amount !== 0 && !label.startsWith('Total for') &&
+                     (label.includes('Permit') || label.includes('Fee') || label.includes('Charge') ||
+                      label.includes('Expense') || label.includes('Cost'))) {
+              // These are likely small operational costs
+              plData.expenses.otherOperational += amount;
+            }
+            // Administrative catch-all (for truly misc items)
             else if (amount !== 0 && !label.startsWith('Total for')) {
-              plData.expenses.otherExpenses += amount;
+              plData.expenses.otherAdministrative += amount;
             }
 
             // Also track pass-through expenses separately for yard storage
@@ -471,7 +519,17 @@ export async function parsePLData(startDate?: Date, endDate?: Date): Promise<PLS
   const aggregatedExpenses: ExpenseBreakdown = {
     driverPay: 0,
     fuel: 0,
-    passThrough: 0,
+    longHaulDrayage: 0,
+    hazmat: 0,
+    pilotCarEscort: 0,
+    placardRemoval: 0,
+    overweight: 0,
+    oversizedPermit: 0,
+    otherOperational: 0,
+    transloading: 0,
+    warehouseStorage: 0,
+    shrinkWrap: 0,
+    palletization: 0,
     payrollExpenses: 0,
     healthInsurance: 0,
     commercialInsurance: 0,
@@ -481,11 +539,13 @@ export async function parsePLData(startDate?: Date, endDate?: Date): Promise<PLS
     chassisRental: 0,
     equipmentRental: 0,
     accountingServices: 0,
+    professionalFees: 0,
+    depreciation: 0,
     computerAndInternet: 0,
     bankCharges: 0,
     businessLicenses: 0,
     advertising: 0,
-    otherExpenses: 0,
+    otherAdministrative: 0,
   };
 
   for (const q of quarters) {
@@ -495,7 +555,17 @@ export async function parsePLData(startDate?: Date, endDate?: Date): Promise<PLS
     // Aggregate expense breakdown
     aggregatedExpenses.driverPay += q.expenses.driverPay;
     aggregatedExpenses.fuel += q.expenses.fuel;
-    aggregatedExpenses.passThrough += q.expenses.passThrough;
+    aggregatedExpenses.longHaulDrayage += q.expenses.longHaulDrayage;
+    aggregatedExpenses.hazmat += q.expenses.hazmat;
+    aggregatedExpenses.pilotCarEscort += q.expenses.pilotCarEscort;
+    aggregatedExpenses.placardRemoval += q.expenses.placardRemoval;
+    aggregatedExpenses.overweight += q.expenses.overweight;
+    aggregatedExpenses.oversizedPermit += q.expenses.oversizedPermit;
+    aggregatedExpenses.otherOperational += q.expenses.otherOperational;
+    aggregatedExpenses.transloading += q.expenses.transloading;
+    aggregatedExpenses.warehouseStorage += q.expenses.warehouseStorage;
+    aggregatedExpenses.shrinkWrap += q.expenses.shrinkWrap;
+    aggregatedExpenses.palletization += q.expenses.palletization;
     aggregatedExpenses.payrollExpenses += q.expenses.payrollExpenses;
     aggregatedExpenses.healthInsurance += q.expenses.healthInsurance;
     aggregatedExpenses.commercialInsurance += q.expenses.commercialInsurance;
@@ -505,16 +575,35 @@ export async function parsePLData(startDate?: Date, endDate?: Date): Promise<PLS
     aggregatedExpenses.chassisRental += q.expenses.chassisRental;
     aggregatedExpenses.equipmentRental += q.expenses.equipmentRental;
     aggregatedExpenses.accountingServices += q.expenses.accountingServices;
+    aggregatedExpenses.professionalFees += q.expenses.professionalFees;
+    aggregatedExpenses.depreciation += q.expenses.depreciation;
     aggregatedExpenses.computerAndInternet += q.expenses.computerAndInternet;
     aggregatedExpenses.bankCharges += q.expenses.bankCharges;
     aggregatedExpenses.businessLicenses += q.expenses.businessLicenses;
     aggregatedExpenses.advertising += q.expenses.advertising;
-    aggregatedExpenses.otherExpenses += q.expenses.otherExpenses;
+    aggregatedExpenses.otherAdministrative += q.expenses.otherAdministrative;
   }
 
   const overallNetProfit = overallIncome - overallExpenses;
 
-  // Calculate overhead expenses (everything except driver pay, fuel, and pass-through)
+  // Calculate direct operations costs
+  const directOperationsCosts = aggregatedExpenses.driverPay +
+    aggregatedExpenses.fuel +
+    aggregatedExpenses.longHaulDrayage +
+    aggregatedExpenses.hazmat +
+    aggregatedExpenses.pilotCarEscort +
+    aggregatedExpenses.placardRemoval +
+    aggregatedExpenses.overweight +
+    aggregatedExpenses.oversizedPermit +
+    aggregatedExpenses.otherOperational;
+
+  // Calculate pass-through costs
+  const passThroughCosts = aggregatedExpenses.transloading +
+    aggregatedExpenses.warehouseStorage +
+    aggregatedExpenses.shrinkWrap +
+    aggregatedExpenses.palletization;
+
+  // Calculate overhead expenses (everything except direct operations and pass-through)
   const overallOverheadExpenses = aggregatedExpenses.payrollExpenses +
     aggregatedExpenses.healthInsurance +
     aggregatedExpenses.commercialInsurance +
@@ -524,13 +613,15 @@ export async function parsePLData(startDate?: Date, endDate?: Date): Promise<PLS
     aggregatedExpenses.chassisRental +
     aggregatedExpenses.equipmentRental +
     aggregatedExpenses.accountingServices +
+    aggregatedExpenses.professionalFees +
+    aggregatedExpenses.depreciation +
     aggregatedExpenses.computerAndInternet +
     aggregatedExpenses.bankCharges +
     aggregatedExpenses.businessLicenses +
     aggregatedExpenses.advertising +
-    aggregatedExpenses.otherExpenses;
+    aggregatedExpenses.otherAdministrative;
 
-  const overallOperatingProfit = overallIncome - aggregatedExpenses.driverPay - aggregatedExpenses.fuel - aggregatedExpenses.passThrough;
+  const overallOperatingProfit = overallIncome - directOperationsCosts - passThroughCosts;
 
   return {
     quarters,
