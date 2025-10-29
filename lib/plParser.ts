@@ -54,6 +54,13 @@ export interface PLSummary {
     startupCosts: number; // Dec 2024 - May 2025
     netProfit: number;
   };
+  overallPL: {
+    totalIncome: number;
+    totalExpenses: number;
+    netProfit: number;
+    operatingProfit: number; // Before overhead expenses
+    overheadExpenses: number;
+  };
 }
 
 // Map file numbers to quarters
@@ -346,6 +353,22 @@ export async function parsePLData(startDate?: Date, endDate?: Date): Promise<PLS
     comparisonMap['Q4'],
   ];
 
+  // Calculate overall P&L totals for the filtered period
+  let overallIncome = 0;
+  let overallExpenses = 0;
+
+  for (const q of quarters) {
+    overallIncome += q.totalIncome;
+    overallExpenses += q.totalExpenses;
+  }
+
+  const overallNetProfit = overallIncome - overallExpenses;
+
+  // Operating profit is net profit before overhead (approximation based on expense categories)
+  // We'll use the net profit as the base and back-calculate overhead later in the dashboard
+  const overallOperatingProfit = overallNetProfit;
+  const overallOverheadExpenses = 0; // Will be calculated from expense breakdown if needed
+
   return {
     quarters,
     quarterlyMetrics,
@@ -355,6 +378,13 @@ export async function parsePLData(startDate?: Date, endDate?: Date): Promise<PLS
       totalExpenses,
       startupCosts,
       netProfit,
+    },
+    overallPL: {
+      totalIncome: overallIncome,
+      totalExpenses: overallExpenses,
+      netProfit: overallNetProfit,
+      operatingProfit: overallOperatingProfit,
+      overheadExpenses: overallOverheadExpenses,
     },
   };
 }
