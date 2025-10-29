@@ -10,6 +10,7 @@ import type {
   DriverMetric,
   ManagerMetrics,
   YardStorageMetrics,
+  MonthlyRevenueComparison,
 } from './types';
 import type { PLSummary } from './plParser';
 
@@ -157,11 +158,15 @@ export function calculateDashboardMetrics(
   const otrRecords = records.filter(r => r.isOTR);
   const otrRevenue = otrRecords.reduce((sum, r) => sum + r.totalCharges, 0);
   const otrProfit = otrRecords.reduce((sum, r) => sum + r.profit, 0);
+  const otrDriverPay = otrRecords.reduce((sum, r) => sum + r.driverPayTotal, 0);
+  const otrExpenses = otrRecords.reduce((sum, r) => sum + r.expenseTotal, 0);
 
   // Local Drayage Metrics
   const localRecords = records.filter(r => !r.isOTR);
   const localRevenue = localRecords.reduce((sum, r) => sum + r.totalCharges, 0);
   const localProfit = localRecords.reduce((sum, r) => sum + r.profit, 0);
+  const localDriverPay = localRecords.reduce((sum, r) => sum + r.driverPayTotal, 0);
+  const localExpenses = localRecords.reduce((sum, r) => sum + r.expenseTotal, 0);
 
   // Service Type Breakdown
   const serviceMap = new Map<string, ServiceTypeMetric>();
@@ -346,12 +351,16 @@ export function calculateDashboardMetrics(
       totalProfit: otrProfit,
       totalLoads: otrRecords.length,
       averageMargin: otrRevenue > 0 ? (otrProfit / otrRevenue) * 100 : 0,
+      totalDriverPay: otrDriverPay,
+      totalExpenses: otrExpenses,
     },
     localDrayageMetrics: {
       totalRevenue: localRevenue,
       totalProfit: localProfit,
       totalLoads: localRecords.length,
       averageMargin: localRevenue > 0 ? (localProfit / localRevenue) * 100 : 0,
+      totalDriverPay: localDriverPay,
+      totalExpenses: localExpenses,
     },
     yardStorageMetrics,
     managerMetrics,
@@ -416,4 +425,46 @@ export function exportOTRLoadsToCSV(records: ProfitabilityRecord[]): string {
   ].join('\n');
 
   return csvContent;
+}
+
+export function calculateMonthlyRevenueComparison(
+  records: ProfitabilityRecord[]
+): MonthlyRevenueComparison[] {
+  // Month names for display
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // Initialize data structure with all 12 months
+  const monthlyData = new Map<number, MonthlyRevenueComparison>();
+  for (let i = 0; i < 12; i++) {
+    monthlyData.set(i + 1, {
+      month: monthNames[i],
+      monthNumber: i + 1,
+    });
+  }
+
+  // Process each record and aggregate by month and year
+  records.forEach(record => {
+    try {
+      const date = record.dateObj;
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1; // 1-12
+
+      const monthData = monthlyData.get(month);
+      if (!monthData) return;
+
+      // Add revenue to the appropriate year and business line
+      if (record.isOTR) {
+        const key = `otrRevenue${year}`;
+        monthData[key] = (monthData[key] as number || 0) + record.totalCharges;
+      } else {
+        const key = `localRevenue${year}`;
+        monthData[key] = (monthData[key] as number || 0) + record.totalCharges;
+      }
+    } catch (e) {
+      console.error('Error processing record for monthly comparison:', record.date, e);
+    }
+  });
+
+  // Convert to array and ensure all months are present
+  return Array.from(monthlyData.values()).sort((a, b) => a.monthNumber - b.monthNumber);
 }

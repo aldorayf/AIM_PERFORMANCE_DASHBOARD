@@ -66,6 +66,8 @@ export interface DashboardMetrics {
     totalProfit: number;
     totalLoads: number;
     averageMargin: number;
+    totalDriverPay: number;
+    totalExpenses: number;
   };
 
   localDrayageMetrics: {
@@ -73,6 +75,8 @@ export interface DashboardMetrics {
     totalProfit: number;
     totalLoads: number;
     averageMargin: number;
+    totalDriverPay: number;
+    totalExpenses: number;
   };
 
   yardStorageMetrics: YardStorageMetrics;
@@ -122,4 +126,10 @@ export interface DriverMetric {
   loads: number;
   margin: number;
   totalPay: number;
+}
+
+export interface MonthlyRevenueComparison {
+  month: string; // "Jan", "Feb", etc.
+  monthNumber: number; // 1-12 for sorting
+  [key: string]: string | number; // otrRevenue2023, otrRevenue2024, localRevenue2023, etc.
 }

@@ -6,12 +6,14 @@ import DataTable from '@/components/DataTable';
 import RevenueChart from '@/components/RevenueChart';
 import ServiceTypeChart from '@/components/ServiceTypeChart';
 import QuarterlyPLChart from '@/components/QuarterlyPLChart';
-import type { DashboardMetrics, ProfitabilityRecord, DateRange } from '@/lib/types';
+import MonthlyRevenueComparisonChart from '@/components/MonthlyRevenueComparisonChart';
+import type { DashboardMetrics, ProfitabilityRecord, DateRange, MonthlyRevenueComparison } from '@/lib/types';
 import {
   parseProfitabilityData,
   parseOTRData,
   calculateDashboardMetrics,
   filterRecordsByDateRange,
+  calculateMonthlyRevenueComparison,
 } from '@/lib/dataProcessor';
 import { parsePLData, type QuarterlyComparisonMetric } from '@/lib/plParser';
 
@@ -41,6 +43,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'financial' | 'operations' | 'customers'>('financial');
   const [allRecords, setAllRecords] = useState<ProfitabilityRecord[]>([]);
   const [quarterlyComparison, setQuarterlyComparison] = useState<QuarterlyComparisonMetric[]>([]);
+  const [monthlyRevenueComparison, setMonthlyRevenueComparison] = useState<MonthlyRevenueComparison[]>([]);
   const [selectedDateRangeIndex, setSelectedDateRangeIndex] = useState(2); // Default to 2024 Q4 - 2025 Q3
 
   // Load initial data once
@@ -72,6 +75,10 @@ export default function Dashboard() {
         // Load complete P&L data (all years) for quarterly comparison chart
         const completePLSummary = await parsePLData(); // No date range filter
         setQuarterlyComparison(completePLSummary.quarterlyComparison);
+
+        // Calculate monthly revenue comparison for all years (no date filter)
+        const monthlyComparison = calculateMonthlyRevenueComparison(records);
+        setMonthlyRevenueComparison(monthlyComparison);
       } catch (err) {
         console.error('Error loading data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -222,8 +229,16 @@ export default function Dashboard() {
                   <span className="text-gray-400">Revenue:</span>
                   <span className="font-semibold">{formatCurrency(metrics.otrMetrics.totalRevenue)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Profit:</span>
+                <div className="flex justify-between pl-4">
+                  <span className="text-gray-400 text-sm">Driver Pay:</span>
+                  <span className="font-semibold text-sm text-red-400">-{formatCurrency(metrics.otrMetrics.totalDriverPay)}</span>
+                </div>
+                <div className="flex justify-between pl-4">
+                  <span className="text-gray-400 text-sm">Other Expenses:</span>
+                  <span className="font-semibold text-sm text-red-400">-{formatCurrency(metrics.otrMetrics.totalExpenses)}</span>
+                </div>
+                <div className="flex justify-between border-t border-[#2d3748] pt-2">
+                  <span className="text-gray-400 font-semibold">Profit:</span>
                   <span className="font-semibold text-green-400">{formatCurrency(metrics.otrMetrics.totalProfit)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -257,8 +272,16 @@ export default function Dashboard() {
                   <span className="text-gray-400">Revenue:</span>
                   <span className="font-semibold">{formatCurrency(metrics.localDrayageMetrics.totalRevenue)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Profit:</span>
+                <div className="flex justify-between pl-4">
+                  <span className="text-gray-400 text-sm">Driver Pay:</span>
+                  <span className="font-semibold text-sm text-red-400">-{formatCurrency(metrics.localDrayageMetrics.totalDriverPay)}</span>
+                </div>
+                <div className="flex justify-between pl-4">
+                  <span className="text-gray-400 text-sm">Other Expenses:</span>
+                  <span className="font-semibold text-sm text-red-400">-{formatCurrency(metrics.localDrayageMetrics.totalExpenses)}</span>
+                </div>
+                <div className="flex justify-between border-t border-[#2d3748] pt-2">
+                  <span className="text-gray-400 font-semibold">Profit:</span>
                   <span className="font-semibold text-green-400">{formatCurrency(metrics.localDrayageMetrics.totalProfit)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -494,6 +517,7 @@ export default function Dashboard() {
         {activeTab === 'financial' && (
           <div className="space-y-8">
             <QuarterlyPLChart data={quarterlyComparison} />
+            <MonthlyRevenueComparisonChart data={monthlyRevenueComparison} />
             <RevenueChart data={metrics.monthlyBreakdown} />
             <ServiceTypeChart data={metrics.serviceTypeBreakdown} />
 
