@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [allRecords, setAllRecords] = useState<ProfitabilityRecord[]>([]);
   const [quarterlyComparison, setQuarterlyComparison] = useState<QuarterlyComparisonMetric[]>([]);
   const [monthlyRevenueComparison, setMonthlyRevenueComparison] = useState<MonthlyRevenueComparison[]>([]);
+  const [plSummary, setPlSummary] = useState<any>(null);
   const [selectedDateRangeIndex, setSelectedDateRangeIndex] = useState(2); // Default to 2024 Q4 - 2025 Q3
 
   // Load initial data once
@@ -105,8 +106,9 @@ export default function Dashboard() {
           selectedRange.endDate
         );
 
-        // Parse P&L data with date range filter (for yard storage metrics only)
+        // Parse P&L data with date range filter (for yard storage metrics and overall P&L)
         const plSummary = await parsePLData(selectedRange.startDate, selectedRange.endDate);
+        setPlSummary(plSummary);
 
         // Note: quarterlyComparison is NOT updated here - it shows all years always
 
@@ -333,6 +335,108 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* QuickBooks NET Profit Section */}
+        {plSummary && plSummary.overallPL && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">QuickBooks Financial Performance</h2>
+            <div className="bg-[#1a2332] rounded-lg p-6 border border-[#2d3748]">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                {/* Total Income */}
+                <div className="text-center">
+                  <div className="text-sm text-gray-400 mb-2">Total Income</div>
+                  <div className="text-2xl font-bold text-green-400">
+                    {formatCurrency(plSummary.overallPL.totalIncome)}
+                  </div>
+                </div>
+
+                {/* Total Expenses */}
+                <div className="text-center">
+                  <div className="text-sm text-gray-400 mb-2">Total Expenses</div>
+                  <div className="text-2xl font-bold text-red-400">
+                    {formatCurrency(plSummary.overallPL.totalExpenses)}
+                  </div>
+                </div>
+
+                {/* Net Profit */}
+                <div className="text-center">
+                  <div className="text-sm text-gray-400 mb-2">Net Profit</div>
+                  <div className={`text-2xl font-bold ${plSummary.overallPL.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatCurrency(plSummary.overallPL.netProfit)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Analysis */}
+              <div className="border-t border-[#2d3748] pt-6">
+                <h3 className="text-lg font-semibold mb-3 text-purple-400">Financial Analysis</h3>
+                <div className="space-y-3 text-gray-300">
+                  <div className="flex items-start">
+                    <span className="text-purple-400 mr-2 mt-1">•</span>
+                    <div>
+                      <strong>Profit Margin:</strong> {' '}
+                      <span className={`font-semibold ${(plSummary.overallPL.netProfit / plSummary.overallPL.totalIncome * 100) >= 10 ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {((plSummary.overallPL.netProfit / plSummary.overallPL.totalIncome) * 100).toFixed(2)}%
+                      </span>
+                      {' '}- {(plSummary.overallPL.netProfit / plSummary.overallPL.totalIncome * 100) >= 10
+                        ? 'Strong profit margins indicate healthy operational efficiency'
+                        : 'Profit margins could be improved through cost optimization or revenue growth'}
+                    </div>
+                  </div>
+
+                  <div className="flex items-start">
+                    <span className="text-purple-400 mr-2 mt-1">•</span>
+                    <div>
+                      <strong>Expense Ratio:</strong> {' '}
+                      <span className="font-semibold text-orange-400">
+                        {((plSummary.overallPL.totalExpenses / plSummary.overallPL.totalIncome) * 100).toFixed(2)}%
+                      </span>
+                      {' '}of total income goes to expenses.
+                      {(plSummary.overallPL.totalExpenses / plSummary.overallPL.totalIncome) < 0.85
+                        ? ' This is a healthy expense ratio for the trucking industry.'
+                        : ' Consider reviewing expense categories for optimization opportunities.'}
+                    </div>
+                  </div>
+
+                  <div className="flex items-start">
+                    <span className="text-purple-400 mr-2 mt-1">•</span>
+                    <div>
+                      <strong>Break-even Analysis:</strong> The company needs {formatCurrency(plSummary.overallPL.totalExpenses)} in revenue to cover all expenses.
+                      Current revenue of {formatCurrency(plSummary.overallPL.totalIncome)} provides a {' '}
+                      <span className={`font-semibold ${plSummary.overallPL.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {formatCurrency(Math.abs(plSummary.overallPL.netProfit))} {plSummary.overallPL.netProfit >= 0 ? 'surplus' : 'shortfall'}
+                      </span>.
+                    </div>
+                  </div>
+
+                  <div className="flex items-start">
+                    <span className="text-purple-400 mr-2 mt-1">•</span>
+                    <div>
+                      <strong>Dashboard Gross Profit vs QB Net Profit:</strong> The dashboard shows operating profit from load-level data
+                      ({formatCurrency(metrics.totalProfit)}), while QuickBooks shows company-wide net profit after all overhead expenses
+                      ({formatCurrency(plSummary.overallPL.netProfit)}). The difference of approximately {' '}
+                      <span className="font-semibold text-yellow-400">
+                        {formatCurrency(Math.abs(metrics.totalProfit - plSummary.overallPL.netProfit))}
+                      </span>
+                      {' '}represents overhead costs including payroll, insurance, facilities, and administrative expenses.
+                    </div>
+                  </div>
+
+                  {plSummary.overallPL.netProfit < 0 && (
+                    <div className="flex items-start">
+                      <span className="text-red-400 mr-2 mt-1">⚠</span>
+                      <div>
+                        <strong className="text-red-400">Attention Required:</strong> The company is currently operating at a loss.
+                        Immediate actions should include reviewing high-cost expense categories, optimizing route efficiency,
+                        renegotiating vendor contracts, and exploring revenue growth opportunities.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Manager Performance */}
         <div className="mb-8">

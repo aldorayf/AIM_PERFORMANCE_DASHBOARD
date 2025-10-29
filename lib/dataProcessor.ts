@@ -324,7 +324,7 @@ export function calculateDashboardMetrics(
 
   // Bobby Lacy - Local Drayage Manager
   const bobbyOverhead = 101820.66;
-  const bobbyThreshold = 175000;
+  const bobbyThreshold = 250000;
   const bobbyBonus = localProfit > bobbyThreshold ? (localProfit - bobbyThreshold) * 0.05 : 0;
   managerMetrics.push({
     name: 'Bobby Lacy',
