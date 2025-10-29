@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AreaChart,
   Area,
@@ -18,6 +18,8 @@ interface RevenueChartProps {
 }
 
 export default function RevenueChart({ data }: RevenueChartProps) {
+  const [showOTR, setShowOTR] = useState(true);
+  const [showLocal, setShowLocal] = useState(true);
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -29,9 +31,33 @@ export default function RevenueChart({ data }: RevenueChartProps) {
 
   return (
     <div className="bg-[#1a2332] rounded-lg p-6 border border-[#2d3748]">
-      <h3 className="text-lg font-semibold text-white mb-4">
-        Monthly Revenue & Profit Trends (OTR vs Local Drayage)
-      </h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-white">
+          Monthly Revenue & Profit Trends (OTR vs Local Drayage)
+        </h3>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowOTR(!showOTR)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showOTR
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-[#0f1419] text-gray-400 border border-[#2d3748] hover:bg-[#1a2332]'
+            }`}
+          >
+            OTR
+          </button>
+          <button
+            onClick={() => setShowLocal(!showLocal)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showLocal
+                ? 'bg-cyan-600 text-white hover:bg-cyan-700'
+                : 'bg-[#0f1419] text-gray-400 border border-[#2d3748] hover:bg-[#1a2332]'
+            }`}
+          >
+            Local
+          </button>
+        </div>
+      </div>
       <ResponsiveContainer width="100%" height={400}>
         <AreaChart
           data={data}
@@ -83,38 +109,46 @@ export default function RevenueChart({ data }: RevenueChartProps) {
             wrapperStyle={{ color: '#9ca3af' }}
             iconType="circle"
           />
-          <Area
-            type="monotone"
-            dataKey="otrRevenue"
-            stroke="#3b82f6"
-            fillOpacity={1}
-            fill="url(#colorOTRRevenue)"
-            name="OTR Revenue"
-          />
-          <Area
-            type="monotone"
-            dataKey="localDrayageRevenue"
-            stroke="#06b6d4"
-            fillOpacity={1}
-            fill="url(#colorLocalRevenue)"
-            name="Local Drayage Revenue"
-          />
-          <Area
-            type="monotone"
-            dataKey="otrProfit"
-            stroke="#10b981"
-            fillOpacity={1}
-            fill="url(#colorOTRProfit)"
-            name="OTR Profit"
-          />
-          <Area
-            type="monotone"
-            dataKey="localDrayageProfit"
-            stroke="#34d399"
-            fillOpacity={1}
-            fill="url(#colorLocalProfit)"
-            name="Local Drayage Profit"
-          />
+          {showOTR && (
+            <Area
+              type="monotone"
+              dataKey="otrRevenue"
+              stroke="#3b82f6"
+              fillOpacity={1}
+              fill="url(#colorOTRRevenue)"
+              name="OTR Revenue"
+            />
+          )}
+          {showLocal && (
+            <Area
+              type="monotone"
+              dataKey="localDrayageRevenue"
+              stroke="#06b6d4"
+              fillOpacity={1}
+              fill="url(#colorLocalRevenue)"
+              name="Local Drayage Revenue"
+            />
+          )}
+          {showOTR && (
+            <Area
+              type="monotone"
+              dataKey="otrProfit"
+              stroke="#10b981"
+              fillOpacity={1}
+              fill="url(#colorOTRProfit)"
+              name="OTR Profit"
+            />
+          )}
+          {showLocal && (
+            <Area
+              type="monotone"
+              dataKey="localDrayageProfit"
+              stroke="#34d399"
+              fillOpacity={1}
+              fill="url(#colorLocalProfit)"
+              name="Local Drayage Profit"
+            />
+          )}
           <Area
             type="monotone"
             dataKey="driverPay"
