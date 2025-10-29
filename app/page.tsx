@@ -367,8 +367,169 @@ export default function Dashboard() {
                 </div>
               </div>
 
+              {/* Detailed Expense Breakdown */}
+              {plSummary.overallPL.expenseBreakdown && (
+                <div className="border-t border-[#2d3748] pt-6 mt-6">
+                  <h3 className="text-lg font-semibold mb-4 text-blue-400">Where Your Money Goes - Detailed Expense Breakdown</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Operations Costs */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">Direct Operations Costs</h4>
+                      <div className="space-y-2 bg-[#0f1419] rounded-lg p-4">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Driver Pay (Base + Drayage):</span>
+                          <span className="font-semibold text-red-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.driverPay)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Fuel:</span>
+                          <span className="font-semibold text-red-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.fuel)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Pass-Through Costs:</span>
+                          <span className="font-semibold text-red-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.passThrough)}</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t border-[#2d3748]">
+                          <span className="text-gray-300 font-semibold">Subtotal:</span>
+                          <span className="font-bold text-red-400">
+                            {formatCurrency(
+                              plSummary.overallPL.expenseBreakdown.driverPay +
+                              plSummary.overallPL.expenseBreakdown.fuel +
+                              plSummary.overallPL.expenseBreakdown.passThrough
+                            )}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 pt-2">
+                          {(((plSummary.overallPL.expenseBreakdown.driverPay + plSummary.overallPL.expenseBreakdown.fuel + plSummary.overallPL.expenseBreakdown.passThrough) / plSummary.overallPL.totalExpenses) * 100).toFixed(1)}% of total expenses
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Payroll & Benefits */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">Payroll & Benefits</h4>
+                      <div className="space-y-2 bg-[#0f1419] rounded-lg p-4">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Payroll Expenses:</span>
+                          <span className="font-semibold text-orange-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.payrollExpenses)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Health Insurance:</span>
+                          <span className="font-semibold text-orange-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.healthInsurance)}</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t border-[#2d3748]">
+                          <span className="text-gray-300 font-semibold">Subtotal:</span>
+                          <span className="font-bold text-orange-400">
+                            {formatCurrency(
+                              plSummary.overallPL.expenseBreakdown.payrollExpenses +
+                              plSummary.overallPL.expenseBreakdown.healthInsurance
+                            )}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 pt-2">
+                          {(((plSummary.overallPL.expenseBreakdown.payrollExpenses + plSummary.overallPL.expenseBreakdown.healthInsurance) / plSummary.overallPL.totalExpenses) * 100).toFixed(1)}% of total expenses
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Facility & Equipment */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">Facility & Equipment</h4>
+                      <div className="space-y-2 bg-[#0f1419] rounded-lg p-4">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Commercial Insurance:</span>
+                          <span className="font-semibold text-yellow-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.commercialInsurance)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Chassis Rental:</span>
+                          <span className="font-semibold text-yellow-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.chassisRental)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Rent Expense:</span>
+                          <span className="font-semibold text-yellow-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.rentExpense)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Utilities:</span>
+                          <span className="font-semibold text-yellow-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.utilities)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Repairs & Maintenance:</span>
+                          <span className="font-semibold text-yellow-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.repairsAndMaintenance)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Equipment Rental:</span>
+                          <span className="font-semibold text-yellow-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.equipmentRental)}</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t border-[#2d3748]">
+                          <span className="text-gray-300 font-semibold">Subtotal:</span>
+                          <span className="font-bold text-yellow-400">
+                            {formatCurrency(
+                              plSummary.overallPL.expenseBreakdown.commercialInsurance +
+                              plSummary.overallPL.expenseBreakdown.chassisRental +
+                              plSummary.overallPL.expenseBreakdown.rentExpense +
+                              plSummary.overallPL.expenseBreakdown.utilities +
+                              plSummary.overallPL.expenseBreakdown.repairsAndMaintenance +
+                              plSummary.overallPL.expenseBreakdown.equipmentRental
+                            )}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 pt-2">
+                          {(((plSummary.overallPL.expenseBreakdown.commercialInsurance + plSummary.overallPL.expenseBreakdown.chassisRental + plSummary.overallPL.expenseBreakdown.rentExpense + plSummary.overallPL.expenseBreakdown.utilities + plSummary.overallPL.expenseBreakdown.repairsAndMaintenance + plSummary.overallPL.expenseBreakdown.equipmentRental) / plSummary.overallPL.totalExpenses) * 100).toFixed(1)}% of total expenses
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Administrative & Other */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">Administrative & Other</h4>
+                      <div className="space-y-2 bg-[#0f1419] rounded-lg p-4">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Accounting Services:</span>
+                          <span className="font-semibold text-purple-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.accountingServices)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Computer & Internet:</span>
+                          <span className="font-semibold text-purple-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.computerAndInternet)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Bank Charges:</span>
+                          <span className="font-semibold text-purple-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.bankCharges)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Business Licenses:</span>
+                          <span className="font-semibold text-purple-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.businessLicenses)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Advertising:</span>
+                          <span className="font-semibold text-purple-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.advertising)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Other Expenses:</span>
+                          <span className="font-semibold text-purple-400">{formatCurrency(plSummary.overallPL.expenseBreakdown.otherExpenses)}</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t border-[#2d3748]">
+                          <span className="text-gray-300 font-semibold">Subtotal:</span>
+                          <span className="font-bold text-purple-400">
+                            {formatCurrency(
+                              plSummary.overallPL.expenseBreakdown.accountingServices +
+                              plSummary.overallPL.expenseBreakdown.computerAndInternet +
+                              plSummary.overallPL.expenseBreakdown.bankCharges +
+                              plSummary.overallPL.expenseBreakdown.businessLicenses +
+                              plSummary.overallPL.expenseBreakdown.advertising +
+                              plSummary.overallPL.expenseBreakdown.otherExpenses
+                            )}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 pt-2">
+                          {(((plSummary.overallPL.expenseBreakdown.accountingServices + plSummary.overallPL.expenseBreakdown.computerAndInternet + plSummary.overallPL.expenseBreakdown.bankCharges + plSummary.overallPL.expenseBreakdown.businessLicenses + plSummary.overallPL.expenseBreakdown.advertising + plSummary.overallPL.expenseBreakdown.otherExpenses) / plSummary.overallPL.totalExpenses) * 100).toFixed(1)}% of total expenses
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Analysis */}
-              <div className="border-t border-[#2d3748] pt-6">
+              <div className="border-t border-[#2d3748] pt-6 mt-6">
                 <h3 className="text-lg font-semibold mb-3 text-purple-400">Financial Analysis</h3>
                 <div className="space-y-3 text-gray-300">
                   <div className="flex items-start">
