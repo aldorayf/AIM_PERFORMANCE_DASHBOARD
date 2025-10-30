@@ -80,9 +80,13 @@ export default function RevenueChart({ data }: RevenueChartProps) {
               <stop offset="5%" stopColor="#34d399" stopOpacity={0.8} />
               <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
             </linearGradient>
-            <linearGradient id="colorDriverPay" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="colorOTRDriverPay" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
               <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorLocalDriverPay" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" />
@@ -149,14 +153,26 @@ export default function RevenueChart({ data }: RevenueChartProps) {
               name="Local Drayage Profit"
             />
           )}
-          <Area
-            type="monotone"
-            dataKey="driverPay"
-            stroke="#f59e0b"
-            fillOpacity={1}
-            fill="url(#colorDriverPay)"
-            name="Driver Pay"
-          />
+          {showOTR && (
+            <Area
+              type="monotone"
+              dataKey="otrDriverPay"
+              stroke="#f59e0b"
+              fillOpacity={1}
+              fill="url(#colorOTRDriverPay)"
+              name="OTR Driver Pay"
+            />
+          )}
+          {showLocal && (
+            <Area
+              type="monotone"
+              dataKey="localDrayageDriverPay"
+              stroke="#fbbf24"
+              fillOpacity={1}
+              fill="url(#colorLocalDriverPay)"
+              name="Local Driver Pay"
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
     </div>
