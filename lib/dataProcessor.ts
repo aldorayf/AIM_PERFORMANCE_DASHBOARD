@@ -235,19 +235,23 @@ export function calculateDashboardMetrics(
           loads: 0,
           margin: 0,
           driverPay: 0,
+          otrDriverPay: 0,
+          localDrayageDriverPay: 0,
           expenses: 0,
         });
       }
       const metric = monthMap.get(monthKey)!;
       metric.revenue += record.totalCharges;
 
-      // Split revenue and profit between OTR and Local Drayage
+      // Split revenue, profit, and driver pay between OTR and Local Drayage
       if (record.isOTR) {
         metric.otrRevenue += record.totalCharges;
         metric.otrProfit += record.profit;
+        metric.otrDriverPay += record.driverPayTotal;
       } else {
         metric.localDrayageRevenue += record.totalCharges;
         metric.localDrayageProfit += record.profit;
+        metric.localDrayageDriverPay += record.driverPayTotal;
       }
 
       metric.profit += record.profit;

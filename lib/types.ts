@@ -116,6 +116,8 @@ export interface MonthlyMetric {
   loads: number;
   margin: number;
   driverPay: number;
+  otrDriverPay: number;
+  localDrayageDriverPay: number;
   expenses: number;
 }
 
